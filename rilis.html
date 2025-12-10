@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Casino Fixed: Admin Potion Edition</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --panel: #111;
+            --gold: #ffd700;
+            --cash: #00ff88; 
+            --red: #e74c3c;
+            
+            /* Tier Colors */
+            --trash: #636e72; 
+            --common: #b2bec3; 
+            --rare: #3498db;
+            --epic: #9b59b6;
+            --mythic: #e74c3c;
+            --secret: #00ffea;
+        }
+
+        body {
+            background-color: var(--bg); color: #ecf0f1; font-family: 'Segoe UI', sans-serif;
+            margin: 0; height: 100vh; display: flex; flex-direction: column;
+            overflow: hidden; user-select: none; position: relative;
+        }
+
+        /* --- BACKGROUND FX --- */
+        .bg-shapes { position: fixed; inset: 0; z-index: -1; opacity: 0.3; overflow: hidden; }
+        .shape { position: absolute; border-radius: 50%; filter: blur(100px); animation: float 20s infinite alternate; }
+        .s1 { width: 60vw; height: 60vw; background: radial-gradient(#2c3e50, transparent); top: -20%; left: -20%; }
+        .s2 { width: 50vw; height: 50vw; background: radial-gradient(#4a0000, transparent); bottom: -20%; right: -20%; animation-duration: 25s; }
+        @keyframes float { 0% { transform: translate(0,0); } 100% { transform: translate(50px, 50px); } }
+
+        #fxCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 900; }
+
+        /* --- UI COMPONENTS --- */
+        .top-bar { 
+            padding: 10px 20px; background: rgba(10,10,10,0.95); 
+            border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; z-index: 50; 
+            height: 60px;
+        }
+        
+        .currency-group { display: flex; flex-direction: column; gap: 2px; }
+        .balance-row { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 0.95rem; }
+        .val-gold { color: var(--gold); text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+        .val-cash { color: var(--cash); text-shadow: 0 0 10px rgba(0, 255, 136, 0.3); font-family: monospace; letter-spacing: -1px; }
+
+        .nav-group { display: flex; gap: 8px; }
+        .nav-btn { background: #222; color: #fff; border: 1px solid #444; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
+        .nav-btn:active { transform: scale(0.95); }
+
+        /* --- WHEEL STAGE --- */
+        .stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; perspective: 1000px; }
+        
+        .wheel-container {
+            position: relative; width: 300px; height: 300px;
+            display: flex; justify-content: center; align-items: center;
+        }
+        
+        .wheel-box {
+            width: 100%; height: 100%; border: 8px solid #333; border-radius: 50%;
+            position: relative; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            background: #000; transition: 0.3s;
+        }
+        .wheel-box.boost-active { box-shadow: 0 0 80px var(--secret); border-color: var(--secret); }
+
+        .wheel { width: 100%; height: 100%; will-change: transform; }
+        
+        .pointer { 
+            position: absolute; top: -20px; z-index: 20; 
+            width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 50px solid var(--gold); 
+            filter: drop-shadow(0 4px 5px #000);
+        }
+        
+        .segment { 
+            position: absolute; top: 50%; left: 50%; width: 50%; height: 2px; 
+            transform-origin: 0% 50%; display: flex; justify-content: flex-end; align-items: center; 
+        }
+        .segment img { width: 28px; height: 28px; transform: rotate(90deg); margin-right: 25px; }
+
+        /* --- CONTROLS --- */
+        .controls { margin-top: 40px; display: flex; gap: 12px; }
+        .btn { 
+            position: relative; border: none; border-radius: 12px; padding: 10px 20px; min-width: 90px;
+            color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; 
+            font-weight: bold; transition: transform 0.1s; overflow: hidden; font-size: 0.9rem;
+        }
+        .btn:active { transform: scale(0.92); }
+        .btn:disabled { filter: grayscale(1); opacity: 0.4; cursor: not-allowed; }
+        
+        .btn-boost { background: #2c3e50; border: 2px solid #34495e; }
+        .btn-boost.active { background: transparent; border-color: var(--secret); box-shadow: 0 0 30px rgba(0,255,234,0.4); color: var(--secret); animation: pulseSecret 2s infinite; }
+        .btn-spin { background: linear-gradient(to bottom, #3498db, #2980b9); box-shadow: 0 4px 0 #1c5a85; }
+        .btn-multi { background: linear-gradient(to bottom, #e74c3c, #c0392b); box-shadow: 0 4px 0 #96281b; }
+        
+        .cost-tag { font-size: 0.7rem; margin-top: 3px; opacity: 0.9; }
+
+        /* --- POPUP RESULT --- */
+        .popup-layer { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 800; 
+            display: none; flex-direction: column; align-items: center; justify-content: center; 
+        }
+        .popup-layer.active { display: flex; animation: fadeIn 0.3s; }
+
+        .result-stage {
+            width: 100%; padding: 20px; overflow-x: auto; 
+            display: flex; align-items: center; gap: 20px;
+            scroll-behavior: smooth;
+            padding-left: 50vw; padding-right: 50vw;
+            box-sizing: border-box;
+        }
+        .result-stage::-webkit-scrollbar { display: none; }
+
+        .card {
+            flex-shrink: 0; width: 150px; height: 230px; 
+            background: #151515; border: 2px solid #333; border-radius: 16px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; transform: scale(0.5) translateY(50px);
+            position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .card.reveal { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes popIn { to { opacity: 1; transform: scale(1) translateY(0); } }
+
+        .card img { width: 70px; height: 70px; object-fit: contain; margin-bottom: 15px; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
+        .card h3 { margin: 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+        .card-mutation-badge {
+            position: absolute; top: 10px; right: 10px; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase;
+        }
+
+        /* TIER STYLING */
+        .tier-0, .tier-1 { border-color: var(--common); }
+        .tier-2 { border-color: var(--rare); box-shadow: 0 0 20px rgba(52, 152, 219, 0.3); }
+        .tier-3 { border-color: var(--epic); box-shadow: 0 0 30px rgba(155, 89, 182, 0.4); }
+        .tier-4 { border-color: var(--mythic); box-shadow: 0 0 50px rgba(231, 76, 60, 0.6); animation: shake 4s infinite; }
+        .tier-5 { 
+            border-color: var(--secret); background: radial-gradient(circle at center, #004444, #000); 
+            box-shadow: 0 0 80px var(--secret), inset 0 0 30px var(--secret);
+            animation: pulseSecret 0.8s infinite alternate;
+        }
+        .mut-shiny { border: 2px solid #ffd700; box-shadow: 0 0 40px #ffd700; }
+        .mut-glitch { border: 2px dashed #ff00ff; animation: glitchBorder 0.1s infinite; }
+
+        #collectBtn { 
+            margin-top: 30px; padding: 12px 50px; background: white; color: black; 
+            border: none; border-radius: 50px; font-weight: 900; font-size: 1.1rem; cursor: pointer; 
+            opacity: 0; transform: translateY(20px); transition: 0.3s;
+        }
+        #collectBtn.show { opacity: 1; transform: translateY(0); }
+
+        /* --- START OVERLAY --- */
+        #startOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .btn-start { background: var(--gold); border: none; padding: 15px 50px; font-size: 1.2rem; font-weight: 900; border-radius: 50px; cursor: pointer; animation: pulse 1s infinite; box-shadow: 0 0 40px var(--gold); }
+
+        /* --- MODALS GENERIC --- */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 850; display: none; align-items: center; justify-content: center; }
+        .modal.open { display: flex; animation: fadeIn 0.2s; }
+        .modal-box { width: 90%; max-width: 400px; background: #1a1a1a; border: 1px solid #333; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; max-height: 80vh; }
+        .modal-head { padding: 15px; background: #222; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
+        .modal-body { padding: 15px; overflow-y: auto; text-align: center; }
+        
+        /* --- INVENTORY --- */
+        .inv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 8px; margin-bottom: 20px; }
+        .inv-item { 
+            background: #222; padding: 8px; border-radius: 8px; border: 2px solid #333; aspect-ratio: 1;
+            cursor: pointer; position: relative; transition: 0.1s; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .inv-item:hover { transform: scale(1.05); border-color:white; }
+        .inv-item.locked { border-color: var(--red); background: #2c0b0b; }
+        .inv-lock-icon { position: absolute; top: 2px; right: 2px; font-size: 10px; background: rgba(0,0,0,0.7); padding: 2px; display: none; }
+        .inv-item.locked .inv-lock-icon { display: block; }
+        
+        /* --- INSPECTOR --- */
+        .inspector-img { width: 100px; height: 100px; margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5)); }
+        .action-row { display: flex; gap: 10px; margin-top: 20px; }
+        .act-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; }
+        .act-lock { background: #555; }
+        .act-sell-coin { background: var(--gold); color: black; }
+        .act-sell-cash { background: var(--cash); color: black; box-shadow: 0 0 15px rgba(0,255,136,0.3); }
+
+        /* --- SHOP --- */
+        .shop-section { margin-bottom: 25px; }
+        .shop-title { text-align: left; font-size: 0.8rem; color: #888; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        
+        .shop-item { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 12px; margin-bottom: 8px; border-radius: 8px; border: 1px solid #333; cursor: pointer; transition: 0.2s; }
+        .shop-item:hover { background: #2a2a2a; border-color: var(--gold); }
+        .price-tag { padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+        .pt-rp { background: #27ae60; color: white; }
+        .pt-coin { background: var(--gold); color: black; }
+        .pt-cash { background: var(--cash); color: black; }
+
+        .loader { width: 30px; height: 30px; border: 3px solid #333; border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s infinite linear; margin: 0 auto 15px; }
+
+        /* --- ANIMATIONS --- */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        @keyframes pulseSecret { 0% { box-shadow: 0 0 40px var(--secret); } 100% { box-shadow: 0 0 80px var(--secret); } }
+        @keyframes shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
+        @keyframes glitchBorder { 0% { border-color: #f0f; } 50% { border-color: #0ff; } 100% { border-color: #f0f; } }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="fxCanvas"></canvas>
+    
+    <div class="bg-shapes">
+        <div class="shape s1"></div>
+        <div class="shape s2"></div>
+    </div>
+
+    <div id="startOverlay">
+        <h1 style="font-size: 2.5rem; color: var(--gold); text-align: center; text-shadow: 0 0 40px var(--gold); margin-bottom: 10px;">SIMULASI KECANDUAN<br><span style="color:#fff; font-size:1.5rem;">BY:ENG</span></h1>
+        <p style="color: #aaa; margin-bottom: 40px;">Saldo System • Pity Rate Integrated</p>
+        <button class="btn-start" onclick="initSystem()">LOGIN</button>
+    </div>
+
+    <div class="top-bar">
+        <div class="currency-group">
+            <div class="balance-row">
+                💵 <span class="val-cash" id="uiSaldo">0</span>
+            </div>
+            <div class="balance-row" style="font-size:0.8rem; opacity:0.9;">
+                🪙 <span class="val-gold" id="uiCoins">0</span>
+            </div>
+            <div id="potionTimer" style="display:none; font-size:0.7rem; color:#e74c3c; font-weight:bold; margin-top:2px; text-shadow:0 0 5px red;">
+                🧪 <span id="timerVal">00:00</span>
+            </div>
+        </div>
+        <div class="nav-group">
+            <button class="nav-btn" onclick="openInv()">🎒</button>
+            <button class="nav-btn" style="background: var(--cash); color: black; border:none;" onclick="openShop()">🛒 TOP UP</button>
+            <button class="nav-btn" id="sfxToggle" onclick="toggleMute()">🔊</button>
+        </div>
+    </div>
+
+    <div class="stage">
+        <div class="wheel-container">
+            <div class="wheel-box" id="wheelBox">
+                <div class="wheel" id="wheel"></div>
+            </div>
+            <div class="pointer"></div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-boost" id="btnBoost" onclick="toggleBoost()">
+                BOOST
+                <span class="cost-tag">+5K Koin</span>
+            </button>
+            <button class="btn btn-spin" id="btnSpin1" onclick="spin(1)">
+                SPIN
+                <span class="cost-tag">100 Koin</span>
+            </button>
+            <button class="btn btn-multi" id="btnSpin5" onclick="spin(5)">
+                AUTO x5
+                <span class="cost-tag">500 Koin</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="popup-layer" id="popupLayer">
+        <div class="result-stage" id="resultStage"></div>
+        <button id="collectBtn" onclick="closePopup()">SIMPAN KE TAS</button>
+    </div>
+
+    <div class="modal" id="modalInv">
+        <div class="modal-box">
+            <div class="modal-head"><h3>INVENTORY (<span id="invCount">0</span>)</h3><span onclick="closeModal('modalInv')" style="cursor:pointer; font-size:1.5rem;">×</span></div>
+            <div class="modal-body">
+                <p style="font-size:0.75rem; color:#888; margin-bottom:15px;">Klik item untuk Inspeksi (Jual / Kunci / Convert).</p>
+                <div class="inv-grid" id="invGrid"></div>
+                <button onclick="sellTrash()" style="width:100%; padding:12px; background:#333; border:none; border-radius:8px; color:white; margin-top:10px;">♻️ JUAL SEMUA (Kecuali Tier 3+)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modalInspector">
+        <div class="modal-box" style="background:#111;">
+            <div class="modal-head"><h3>ITEM DETAIL</h3><span onclick="closeModal('modalInspector')" style="cursor:pointer;">×</span></div>
+            <div class="modal-body" id="inspectorBody">
+                </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modalShop">
+        <div class="modal-box">
+            <div class="modal-head"><h3>STORE & EXCHANGE</h3><span onclick="closeModal('modalShop')" style="cursor:pointer; font-size:1.5rem;">×</span></div>
+            <div class="modal-body">
+                
+                <div class="shop-section">
+                    <div class="shop-title">1. ISI SALDO (SIMULASI RUPIAH)</div>
+                    <div class="shop-item" onclick="confirmBuy('saldo', 20000, 20000)"><div>💵 20,000 Saldo</div><div class="price-tag pt-rp">Rp 20k</div></div>
+                    <div class="shop-item" onclick="confirmBuy('saldo', 100000, 100000)"><div>💵 100,000 Saldo</div><div class="price-tag pt-rp">Rp 100k</div></div>
+                    <div class="shop-item" onclick="confirmBuy('saldo', 500000, 500000)"><div>💵 500,000 Saldo</div><div class="price-tag pt-rp">Rp 500k</div></div>
+                </div>
+
+                <div class="shop-section">
+                    <div class="shop-title">2. TUKAR SALDO KE KOIN</div>
+                    <div class="shop-item" onclick="confirmBuy('coins', 1000, 20000)"><div>🪙 100 Koin</div><div class="price-tag pt-cash">5.000 Saldo</div></div>
+                    <div class="shop-item" onclick="confirmBuy('coins', 5000, 9000)"><div>🪙 500 Koin</div><div class="price-tag pt-cash">20.000 Saldo</div></div>
+                    <div class="shop-item" onclick="confirmBuy('coins', 10000, 180000)"><div>🪙 1K Koin</div><div class="price-tag pt-cash">36.000 Saldo</div></div>
+                    <div class="shop-item" onclick="confirmBuy('coins', 30000, 500000)"><div>🪙 3K Koin</div><div class="price-tag pt-cash">100.000 Saldo</div></div>
+                    <div class="shop-item" onclick="confirmBuy('coins', 50000, 800000)"><div>🪙 50K Koin</div><div class="price-tag pt-cash">1.600,000 Saldo</div></div>
+                    <div class="shop-item" onclick="confirmBuy('coins', 500000, 1500000)"><div>👑 1M Koin</div><div class="price-tag pt-cash">5.000,000 Saldo</div></div>
+                </div>
+
+                <hr style="border-color:#333; margin:15px 0;">
+                <input type="text" id="cheatInput" placeholder="KODE REDEEM" style="width:100%; padding:10px; background:#000; border:1px solid #444; color:white; text-align:center;">
+                <button onclick="redeemCode()" style="margin-top:10px; width:100%; padding:10px; background:#444; border:none; color:white;">KLAIM</button>
+                <div style="margin-top:15px; text-align:center;">
+                    <span onclick="hardReset()" style="font-size:0.7rem; color:#e74c3c; cursor:pointer; text-decoration:underline;">RESET SEMUA DATA</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modalConfirm">
+        <div class="modal-box" style="max-width:300px;">
+            <div class="modal-body">
+                <h3 style="margin-top:0;">KONFIRMASI</h3>
+                <p id="confirmText" style="color:#bbb; font-size:0.9rem;">...</p>
+                <div id="confirmActions" style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                    <button onclick="closeModal('modalConfirm')" style="padding:10px 20px; background:#333; border:none; border-radius:6px; color:white;">BATAL</button>
+                    <button id="btnConfirmBuy" style="padding:10px 20px; background:var(--gold); border:none; border-radius:6px; font-weight:bold; color:black;">PROSES</button>
+                </div>
+                <div id="loadingView" style="display:none; flex-direction:column; align-items:center; padding:20px 0;">
+                    <div class="loader"></div>
+                    <div style="font-size:0.8rem; color:#888;">Menghubungkan Server...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* --- 1. CONFIG DATA --- */
+        const ITEMS = [
+            { id: 1, name: "ZONK", rank: 0, weight: 8000, color: "#636e72", coinVal: 2, cashVal: 0 },
+            { id: 2, name: "OLD BOOT", rank: 0, weight: 8000, color: "#636e72", coinVal: 2, cashVal: 0 },
+            { id: 3, name: "POTION", rank: 1, weight: 4000, color: "#b2bec3", coinVal: 10, cashVal: 0 },
+            { id: 4, name: "GOLD RING", rank: 2, weight: 1500, color: "#3498db", coinVal: 50, cashVal: 0 },
+            { id: 5, name: "DIAMOND", rank: 2, weight: 1500, color: "#3498db", coinVal: 50, cashVal: 0 },
+            { id: 6, name: "EXCALIBUR", rank: 3, weight: 120, color: "#9b59b6", coinVal: 0, cashVal: 150 },
+            { id: 7, name: "PHOENIX", rank: 4, weight: 15, color: "#e74c3c", coinVal: 0, cashVal: 800 },
+            { id: 8, name: "DRAGON", rank: 4, weight: 15, color: "#e74c3c", coinVal: 0, cashVal: 800 },
+            { id: 9, name: "JOKER CARD", rank: 5, weight: 1, color: "#00ffea", coinVal: 0, cashVal: 5000 }
+        ];
+
+        let state = {
+            coins: 1000, saldo: 0, inventory: [], 
+            isSpinning: false, isBoost: false, wheelDeg: 0, isMuted: false,
+            luckExpiry: 0, // NEW: Admin Potion Timer
+            stats: { totalSpins: 0, pityCounter: 0, mutationPity: 0 }
+        };
+
+        const getImg = (n,c) => `https://placehold.co/100/${c.replace('#','')}/ffffff?text=${n.substring(0,2)}`;
+
+        function loadData() {
+            const saved = localStorage.getItem('casinoData_v3');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    // Merge saved state with default state to handle new fields
+                    state = { ...state, ...parsed, stats: parsed.stats || { totalSpins: 0, pityCounter: 0, mutationPity: 0 } };
+                    state.isSpinning = false;
+                } catch (e) { console.error("Corrupted Save"); }
+            }
+        }
+        function saveData() { localStorage.setItem('casinoData_v3', JSON.stringify(state)); }
+        function hardReset() {
+            if(confirm("HARD RESET: Semua Koin, Saldo, Inventory, dan Pity Counter akan dihapus. Lanjut?")) {
+                localStorage.removeItem('casinoData_v3');
+                location.reload();
+            }
+        }
+
+        /* --- 2. ADVANCED ACOUSTIC AUDIO ENGINE --- */
+        const AudioEngine = {
+            ctx: null, isPlaying: false,
+            gainNode: null,
+            tempo: 100, noteIndex: 0, nextNoteTime: 0,
+            noiseBuffer: null,
+
+            init: function() {
+                window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext();
+                this.gainNode = this.ctx.createGain();
+                this.gainNode.connect(this.ctx.destination);
+                this.gainNode.gain.value = 0.5; // Master volume
+                
+                // Create Noise Buffer for "Crowd"
+                const bSize = this.ctx.sampleRate * 2; // 2 seconds
+                this.noiseBuffer = this.ctx.createBuffer(1, bSize, this.ctx.sampleRate);
+                const data = this.noiseBuffer.getChannelData(0);
+                for (let i = 0; i < bSize; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
+
+                this.startMusic();
+            },
+
+            // --- INSTRUMENT SYNTHESIS (PHYSICAL MODELING LITE) ---
+            
+            // 1. Piano: Triangle wave, medium decay, clean sound
+            playPiano: function(time, freq, dur=1.5) {
+                const osc = this.ctx.createOscillator();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, time);
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0, time);
+                gain.gain.linearRampToValueAtTime(0.3, time + 0.02); // Attack
+                gain.gain.exponentialRampToValueAtTime(0.01, time + dur); // Decay
+                osc.connect(gain); gain.connect(this.gainNode);
+                osc.start(time); osc.stop(time + dur);
+            },
+
+            // 2. Acoustic Guitar: Sawtooth + LowPass Filter Envelope (Pluck effect)
+            playGuitar: function(time, freq) {
+                const osc = this.ctx.createOscillator();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(freq, time);
+                
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.Q.value = 1;
+                filter.frequency.setValueAtTime(3000, time);
+                filter.frequency.exponentialRampToValueAtTime(100, time + 0.3); // Pluck sound
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0, time);
+                gain.gain.linearRampToValueAtTime(0.2, time + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.4);
+
+                osc.connect(filter); filter.connect(gain); gain.connect(this.gainNode);
+                osc.start(time); osc.stop(time + 0.4);
+            },
+
+            // 3. Bass: Sine wave, deep and sustained
+            playBass: function(time, freq) {
+                const osc = this.ctx.createOscillator();
+                osc.type = 'sine'; // Sine is cleaner for bass
+                osc.frequency.setValueAtTime(freq, time);
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.3, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+                osc.connect(gain); gain.connect(this.gainNode);
+                osc.start(time); osc.stop(time + 0.6);
+            },
+
+            // --- SEQUENCER ---
+            // Progression: C Major -> G Major -> A Minor -> F Major
+            // Bar: 4 beats. 16 steps per bar (16th notes).
+            scheduler: function() {
+                const lookahead = 25.0; 
+                const scheduleAheadTime = 0.1;
+                while (this.nextNoteTime < this.ctx.currentTime + scheduleAheadTime) {
+                    this.scheduleNote(this.noteIndex, this.nextNoteTime);
+                    this.nextNote();
+                }
+                if(this.isPlaying) window.setTimeout(()=>this.scheduler(), lookahead);
+            },
+
+            nextNote: function() {
+                const secondsPerBeat = 60.0 / this.tempo;
+                this.nextNoteTime += 0.25 * secondsPerBeat;
+                this.noteIndex++;
+            },
+
+            scheduleNote: function(step, time) {
+                if(state.isMuted) return;
+
+                // 64 steps total for 4 bars (16 steps * 4 chords)
+                const loopStep = step % 64; 
+                const bar = Math.floor(loopStep / 16); // 0=C, 1=G, 2=Am, 3=F
+                const beat = loopStep % 16;
+
+                // Chord Definitions (Root, Third, Fifth)
+                const chords = [
+                    [261.63, 329.63, 392.00], // C
+                    [196.00, 246.94, 293.66], // G
+                    [220.00, 261.63, 329.63], // Am
+                    [174.61, 220.00, 261.63]  // F
+                ];
+                const bassNotes = [130.81, 98.00, 110.00, 87.31]; // C3, G2, A2, F2
+
+                const currentChord = chords[bar];
+                const root = bassNotes[bar];
+
+                // Bass: Play on beat 0 and 10 (syncopated)
+                if(beat === 0) this.playBass(time, root);
+                if(beat === 10) this.playBass(time, root);
+
+                // Piano: Strum chord on beat 0, Arp on beat 4, 8, 12
+                if(beat === 0) {
+                    currentChord.forEach((f, i) => this.playPiano(time + i*0.03, f, 2.0));
+                }
+                if(beat === 8) {
+                    // Soft chord pad
+                    currentChord.forEach(f => this.playPiano(time, f, 1.0));
+                }
+
+                // Guitar: Picking pattern (16th notes)
+                const pickPattern = [0, null, 1, null, 2, null, 1, null, 0, null, 1, null, 2, 1, null, null];
+                if(pickPattern[beat] !== null && pickPattern[beat] !== undefined) {
+                    // Randomize timing slightly for human feel
+                    this.playGuitar(time + (Math.random()*0.02), currentChord[pickPattern[beat]] * 2); // An octave higher
+                }
+            },
+
+            startMusic: function() {
+                if(this.isPlaying) return;
+                this.isPlaying = true;
+                this.noteIndex = 0;
+                this.nextNoteTime = this.ctx.currentTime + 0.1;
+                this.scheduler();
+            },
+            stopMusic: function() { this.isPlaying = false; },
+
+            // --- SFX LIBRARY ---
+            playSFX: function(type) {
+                if(state.isMuted) return;
+                const t = this.ctx.currentTime;
+                
+                if(type === 'click') {
+                    // Woodblock style click
+                    const osc = this.ctx.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, t);
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0.3, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(t); osc.stop(t+0.1);
+                }
+                
+                if(type === 'spin') {
+                    // Card shuffling sound
+                    const bufferSize = this.ctx.sampleRate * 0.05;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buffer;
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0.1, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+                    noise.connect(gain); gain.connect(this.ctx.destination);
+                    noise.start(t);
+                }
+
+                if(type === 'cash') {
+                    // High pitch ping (Register sound)
+                    const osc = this.ctx.createOscillator();
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(2000, t);
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0.2, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(t); osc.stop(t+0.5);
+                    setTimeout(()=>{
+                        const osc2 = this.ctx.createOscillator();
+                        osc2.type = 'sine'; osc2.frequency.setValueAtTime(2500, t+0.1);
+                        const gain2 = this.ctx.createGain();
+                        gain2.gain.setValueAtTime(0.2, t+0.1);
+                        gain2.gain.exponentialRampToValueAtTime(0.01, t+0.4);
+                        osc2.connect(gain2); gain2.connect(this.ctx.destination);
+                        osc2.start(t+0.1); osc2.stop(t+0.4);
+                    }, 80);
+                }
+
+                if(type === 'crowd_cheer') {
+                    // Crowd Cheer Simulation using Filtered Noise
+                    const dur = 2.0;
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = this.noiseBuffer;
+                    noise.loop = true;
+                    
+                    // Bandpass filter to make it sound like voices
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(500, t);
+                    filter.Q.value = 0.5;
+
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0, t);
+                    gain.gain.linearRampToValueAtTime(0.5, t + 0.2); // Fade in
+                    gain.gain.linearRampToValueAtTime(0, t + dur); // Fade out
+
+                    noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                    noise.start(t); noise.stop(t + dur);
+
+                    // Add Fanfare (Trumpets)
+                    const trumpets = [523.25, 659.25, 783.99, 1046.50]; // C Major
+                    trumpets.forEach((f, i) => {
+                        const osc = this.ctx.createOscillator();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(f, t);
+                        const tGain = this.ctx.createGain();
+                        tGain.gain.setValueAtTime(0.1, t);
+                        tGain.gain.exponentialRampToValueAtTime(0.01, t + 1.5);
+                        osc.connect(tGain); tGain.connect(this.ctx.destination);
+                        osc.start(t); osc.stop(t+1.5);
+                    });
+                }
+            }
+        };
+
+        /* --- 3. PARTICLE FX --- */
+        const FX = {
+            canvas: document.getElementById('fxCanvas'),
+            ctx: document.getElementById('fxCanvas').getContext('2d'),
+            particles: [],
+            loop: function() {
+                this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight;
+                this.ctx.clearRect(0,0, this.canvas.width, this.canvas.height);
+                for(let i=this.particles.length-1; i>=0; i--){
+                    let p = this.particles[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=0.5; p.life-=0.03;
+                    this.ctx.globalAlpha=p.life; this.ctx.fillStyle=p.color;
+                    this.ctx.beginPath(); this.ctx.arc(p.x,p.y,p.size,0,Math.PI*2); this.ctx.fill();
+                    if(p.life<=0) this.particles.splice(i,1);
+                }
+                this.ctx.globalAlpha=1; requestAnimationFrame(()=>this.loop());
+            },
+            explode: function(x,y,c,amt=30) {
+                for(let i=0;i<amt;i++) this.particles.push({x:x,y:y,vx:(Math.random()-0.5)*15,vy:(Math.random()-0.5)*15,life:1,color:c,size:Math.random()*6});
+            }
+        };
+        FX.loop();
+
+        /* --- 4. GAME LOGIC --- */
+        function initSystem() {
+            loadData();
+            document.getElementById('startOverlay').style.display = 'none';
+            AudioEngine.init();
+            renderWheel();
+            updateUI();
+            if(state.isMuted) AudioEngine.stopMusic();
+        }
+
+        function toggleBoost() {
+            state.isBoost = !state.isBoost;
+            document.getElementById('btnBoost').classList.toggle('active');
+            document.getElementById('wheelBox').classList.toggle('boost-active');
+            if(state.isBoost) AudioEngine.playSFX('click');
+        }
+
+        function rollItem() {
+            let pool = JSON.parse(JSON.stringify(ITEMS));
+            
+            // --- NEW: ADMIN POTION LOGIC ---
+            const isGodMode = Date.now() < state.luckExpiry;
+
+            // Logika Weight Standar
+            if(state.isBoost) pool.forEach(i => { if(i.rank >= 3) i.weight *= 20; }); 
+            if(state.stats.pityCounter >= 100) pool.forEach(i => { if(i.rank >= 3) i.weight *= 5; });
+            if(state.stats.mutationPity >= 1000000) pool.forEach(i => { if(i.rank >= 4) i.weight *= 50; });
+
+            // LOGIKA BRUTAL POTION (20 Juta Luck)
+            if (isGodMode) {
+                pool.forEach(i => {
+                    if (i.rank === 4) i.weight += 10000000; // +10 Juta Weight Phoenix/Dragon
+                    if (i.rank === 5) i.weight += 10000000; // +10 Juta Weight Joker
+                });
+            }
+
+            let total = pool.reduce((a,b)=>a+b.weight,0), r = Math.random()*total, item = pool[0];
+            for(let i of pool) { if(r<i.weight) { item = i; break; } r-=i.weight; }
+            
+            let mut = null;
+            let mutationChance = (state.stats.mutationPity >= 1000000 && item.rank >= 3) ? 0.40 : 0.05;
+            let glitchChance = (state.stats.mutationPity >= 1000000 && item.rank >= 3) ? 0.30 : 0.10;
+
+            if (isGodMode) { mutationChance = 0.5; glitchChance = 0.4; } // Boost mutation juga
+
+            if(Math.random() < mutationChance) mut = "shiny"; 
+            if(item.rank >= 4 && Math.random() < glitchChance) mut = "glitch"; 
+            
+            state.stats.totalSpins++; state.stats.pityCounter++; state.stats.mutationPity++;
+            if(item.rank >= 3) state.stats.pityCounter = 0;
+            if(item.rank >= 3 && mut !== null) state.stats.mutationPity = 0;
+
+            let finalCash = item.cashVal;
+            if(mut === "shiny") finalCash += 500000; 
+            if(mut === "glitch") finalCash += 5000000; 
+
+            return { ...ITEMS.find(x=>x.id===item.id), uid: Date.now()+Math.random(), mutation: mut, locked: false, actualCash: finalCash };
+        }
+
+        function spin(multiplier) {
+            let cost = (multiplier * 100) + (state.isBoost ? 5000 : 0);
+            if(state.coins < cost) { alert("Koin Habis! Top Up dulu bos."); openShop(); return; }
+
+            state.coins -= cost; saveData(); updateUI();
+            state.isSpinning = true;
+            document.querySelectorAll('.btn').forEach(b=>b.disabled=true);
+
+            let results = [];
+            for(let i=0; i<multiplier; i++) results.push(rollItem());
+
+            state.wheelDeg += (360 * 10 + Math.random() * 360);
+            const w = document.getElementById('wheel');
+            w.style.transition = "transform 5.5s cubic-bezier(0.2, 0, 0.1, 1)";
+            w.style.transform = `rotate(${state.wheelDeg}deg)`;
+
+            let intv = setInterval(()=>AudioEngine.playSFX('spin'), 80); // Card shuffle sound
+
+            setTimeout(() => {
+                clearInterval(intv);
+                state.isSpinning = false;
+                document.querySelectorAll('.btn').forEach(b=>b.disabled=false);
+                showResults(results);
+            }, 5500);
+        }
+
+        async function showResults(items) {
+            const layer = document.getElementById('popupLayer');
+            const stage = document.getElementById('resultStage');
+            const btn = document.getElementById('collectBtn');
+            layer.classList.add('active'); stage.innerHTML = ''; btn.classList.remove('show');
+
+            for(let i=0; i<items.length; i++) {
+                const item = items[i];
+                state.inventory.push(item);
+                const div = document.createElement('div');
+                div.className = `card tier-${item.rank} ${item.mutation?'mut-'+item.mutation:''}`;
+                div.innerHTML = `
+                    <div style="font-weight:900; color:#${item.color}">TIER ${item.rank}</div>
+                    <img src="${getImg(item.name, item.color)}">
+                    <h3 style="color:#${item.color}">${item.name}</h3>
+                    ${item.mutation ? `<div class="card-mutation-badge" style="background:${item.mutation==='shiny'?'gold':'#f0f'}; color:black">${item.mutation}</div>`:''}
+                `;
+                stage.appendChild(div); stage.scrollLeft = stage.scrollWidth;
+                div.offsetWidth; div.classList.add('reveal');
+                
+                if(item.rank >= 3) {
+                    AudioEngine.playSFX('crowd_cheer'); 
+                    if(item.rank >= 4) FX.explode(window.innerWidth/2, window.innerHeight/2, item.color); 
+                } else {
+                    AudioEngine.playSFX('click');
+                }
+
+                await new Promise(r => setTimeout(r, 600)); 
+            }
+            saveData(); btn.classList.add('show');
+        }
+
+        function closePopup() { document.getElementById('popupLayer').classList.remove('active'); }
+        function renderWheel() {
+            const w = document.getElementById('wheel'); const deg = 360/ITEMS.length;
+            ITEMS.forEach((it,i)=>{
+                const e = document.createElement('div'); e.className='segment'; e.style.transform=`rotate(${i*deg}deg)`;
+                e.innerHTML=`<img src="${getImg(it.name,it.color)}">`;
+                w.appendChild(e);
+            });
+        }
+
+        /* --- 5. INVENTORY & INSPECTOR --- */
+        function openInv() { document.getElementById('modalInv').classList.add('open'); renderInv(); }
+        function renderInv() {
+            document.getElementById('invCount').innerText = state.inventory.length;
+            const grid = document.getElementById('invGrid'); grid.innerHTML = '';
+            state.inventory.sort((a,b) => (b.rank - a.rank) || (a.id - b.id));
+            state.inventory.forEach(item => {
+                const div = document.createElement('div');
+                div.className = `inv-item ${item.locked ? 'locked' : ''}`;
+                div.style.borderColor = item.locked ? '#e74c3c' : `#${item.color}`;
+                div.onclick = () => openInspector(item);
+                div.innerHTML = `
+                    <div class="inv-lock-icon">🔒</div>
+                    <img src="${getImg(item.name, item.color)}" style="width:40px;">
+                    <div style="font-size:0.6rem; color:#${item.color}">T${item.rank}</div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function openInspector(item) {
+            const modal = document.getElementById('modalInspector');
+            const body = document.getElementById('inspectorBody');
+            modal.classList.add('open');
+            const canSellForCash = item.rank >= 3 || item.mutation;
+            const sellVal = canSellForCash ? (item.actualCash || item.cashVal) : item.coinVal;
+            const sellCurrency = canSellForCash ? 'SALDO 💵' : 'KOIN 🪙';
+            const btnClass = canSellForCash ? 'act-sell-cash' : 'act-sell-coin';
+
+            body.innerHTML = `
+                <img src="${getImg(item.name, item.color)}" class="inspector-img" style="border:2px solid #${item.color}; border-radius:10px; padding:5px;">
+                <h2 style="color:#${item.color}; margin:0;">${item.name}</h2>
+                <p style="color:#888; font-size:0.8rem; margin:5px 0;">Tier ${item.rank} • ${item.mutation ? item.mutation.toUpperCase() : 'Normal'}</p>
+                <div class="action-row">
+                    <button class="act-btn act-lock" onclick="doLock('${item.uid}')">${item.locked ? '🔓 UNLOCK' : '🔒 LOCK'}</button>
+                    ${!item.locked ? `<button class="act-btn ${btnClass}" onclick="doSell('${item.uid}', ${canSellForCash})">JUAL: ${sellVal.toLocaleString()} ${sellCurrency}</button>` : ''}
+                </div>
+            `;
+        }
+
+        function doLock(uid) {
+            const item = state.inventory.find(i=>i.uid == uid);
+            if(item) { item.locked = !item.locked; saveData(); renderInv(); openInspector(item); AudioEngine.playSFX('click'); }
+        }
+
+        function doSell(uid, isCash) {
+            const idx = state.inventory.findIndex(i=>i.uid == uid);
+            if(idx > -1) {
+                const item = state.inventory[idx];
+                const val = isCash ? (item.actualCash || item.cashVal) : item.coinVal;
+                if(isCash) state.saldo += val; else state.coins += val;
+                state.inventory.splice(idx, 1);
+                saveData(); updateUI(); renderInv(); closeModal('modalInspector');
+                AudioEngine.playSFX('cash');
+                if(isCash) FX.explode(window.innerWidth/2, window.innerHeight/2, '#00ff88');
+            }
+        }
+
+        function sellTrash() {
+            const trash = state.inventory.filter(i => !i.locked && i.rank < 3);
+            if(trash.length === 0) return alert("Kosong bos.");
+            let total = 0; trash.forEach(i => total += i.coinVal);
+            if(confirm(`Jual ${trash.length} item sampah seharga ${total.toLocaleString()} Koin?`)) {
+                state.coins += total;
+                state.inventory = state.inventory.filter(i => i.locked || i.rank >= 3);
+                saveData(); updateUI(); renderInv(); AudioEngine.playSFX('cash');
+            }
+        }
+
+        /* --- 6. SHOP & UTILS --- */
+        function updateUI() { 
+            document.getElementById('uiCoins').innerText = state.coins.toLocaleString(); 
+            document.getElementById('uiSaldo').innerText = state.saldo.toLocaleString(); 
+            
+            // UI Handler untuk Timer Potion (Visibility Only)
+            const timerDiv = document.getElementById('potionTimer');
+            if (Date.now() < state.luckExpiry) {
+                timerDiv.style.display = 'block';
+            } else {
+                timerDiv.style.display = 'none';
+            }
+        }
+        
+        function openShop() { document.getElementById('modalShop').classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+        let pendingTx = null;
+        function confirmBuy(type, gain, cost) {
+            if(type === 'coins' && state.saldo < cost) return alert("Saldo kurang.");
+            pendingTx = { type, gain, cost }; closeModal('modalShop');
+            document.getElementById('confirmText').innerText = type === 'saldo' ? `Top Up 💵 ${gain.toLocaleString()}?` : `Beli 🪙 ${gain.toLocaleString()} Koin?`;
+            document.getElementById('modalConfirm').classList.add('open');
+            document.getElementById('confirmActions').style.display = 'flex';
+            document.getElementById('loadingView').style.display = 'none';
+        }
+
+        document.getElementById('btnConfirmBuy').onclick = function() {
+            document.getElementById('confirmActions').style.display = 'none';
+            document.getElementById('loadingView').style.display = 'flex';
+            setTimeout(() => {
+                if(pendingTx.type === 'saldo') state.saldo += pendingTx.gain; 
+                else { state.saldo -= pendingTx.cost; state.coins += pendingTx.gain; }
+                saveData(); updateUI(); closeModal('modalConfirm'); AudioEngine.playSFX('cash');
+                FX.explode(window.innerWidth/2, window.innerHeight/2, pendingTx.type=='saldo'?'#00ff88':'#ffd700', 50);
+            }, 1000);
+        };
+
+        function redeemCode() {
+            const input = document.getElementById('cheatInput').value;
+            if(input === 'ENGGACOR') {
+                state.saldo += 100000000; alert("CHEAT: +100M Saldo"); saveData(); updateUI(); closeModal('modalShop');
+            } else if (input === 'POTIONDARIENG') {
+                // Set Expiry 1 Menit dari sekarang
+                state.luckExpiry = Date.now() + (1 * 60 * 1000);
+                alert("ADMIN POTION AKTIF: Luck +20JT selama 1 Menit!");
+                saveData(); updateUI(); closeModal('modalShop');
+                AudioEngine.playSFX('crowd_cheer');
+            } else {
+                alert("Salah kode.");
+            }
+        }
+
+        function toggleMute() {
+            state.isMuted = !state.isMuted;
+            document.getElementById('sfxToggle').innerText = state.isMuted ? '🔇' : '🔊';
+            state.isMuted ? AudioEngine.stopMusic() : AudioEngine.startMusic();
+            saveData();
+        }
+
+        // GLOBAL TIMER LOOP
+        setInterval(() => {
+            if (state.luckExpiry > Date.now()) {
+                const diff = state.luckExpiry - Date.now();
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((diff % (1000 * 60)) / 1000);
+                document.getElementById('timerVal').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                document.getElementById('potionTimer').style.display = 'block';
+            } else {
+                document.getElementById('potionTimer').style.display = 'none';
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
