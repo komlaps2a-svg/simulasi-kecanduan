@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Casino Fixed: Admin Potion Edition</title>
+    <title>Casino Fixed: Multi-Account & Auto-Price</title>
     <style>
         :root {
             --bg: #050505;
@@ -47,6 +47,8 @@
         .balance-row { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 0.95rem; }
         .val-gold { color: var(--gold); text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
         .val-cash { color: var(--cash); text-shadow: 0 0 10px rgba(0, 255, 136, 0.3); font-family: monospace; letter-spacing: -1px; }
+
+        .user-badge { font-size: 0.7rem; color: #888; margin-top: 2px; text-transform: uppercase; letter-spacing: 1px; }
 
         .nav-group { display: flex; gap: 8px; }
         .nav-btn { background: #222; color: #fff; border: 1px solid #444; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
@@ -213,7 +215,7 @@
     </div>
 
     <div id="startOverlay">
-        <h1 style="font-size: 2.5rem; color: var(--gold); text-align: center; text-shadow: 0 0 40px var(--gold); margin-bottom: 10px;">SIMULASI KECANDUAN<br><span style="color:#fff; font-size:1.5rem;">BY:ENG</span></h1>
+        <h1 style="font-size: 2.5rem; color: var(--gold); text-align: center; text-shadow: 0 0 40px var(--gold); margin-bottom: 10px;">CASINO<br><span style="color:#fff; font-size:1.5rem;">MULTI-ACCOUNT</span></h1>
         <p style="color: #aaa; margin-bottom: 40px;">Saldo System • Pity Rate Integrated</p>
         <button class="btn-start" onclick="initSystem()">LOGIN</button>
     </div>
@@ -226,6 +228,7 @@
             <div class="balance-row" style="font-size:0.8rem; opacity:0.9;">
                 🪙 <span class="val-gold" id="uiCoins">0</span>
             </div>
+            <div id="userBadge" class="user-badge">GUEST</div>
             <div id="potionTimer" style="display:none; font-size:0.7rem; color:#e74c3c; font-weight:bold; margin-top:2px; text-shadow:0 0 5px red;">
                 🧪 <span id="timerVal">00:00</span>
             </div>
@@ -311,7 +314,7 @@
                 <input type="text" id="cheatInput" placeholder="KODE REDEEM" style="width:100%; padding:10px; background:#000; border:1px solid #444; color:white; text-align:center;">
                 <button onclick="redeemCode()" style="margin-top:10px; width:100%; padding:10px; background:#444; border:none; color:white;">KLAIM</button>
                 <div style="margin-top:15px; text-align:center;">
-                    <span onclick="hardReset()" style="font-size:0.7rem; color:#e74c3c; cursor:pointer; text-decoration:underline;">RESET SEMUA DATA</span>
+                    <span onclick="hardReset()" style="font-size:0.7rem; color:#e74c3c; cursor:pointer; text-decoration:underline;">RESET AKUN INI</span>
                 </div>
             </div>
         </div>
@@ -348,268 +351,181 @@
             { id: 9, name: "JOKER CARD", rank: 5, weight: 1, color: "#00ffea", coinVal: 0, cashVal: 5000 }
         ];
 
+        let currentUserKey = ""; // Disini kita simpan nama user
+
         let state = {
             coins: 1000, saldo: 0, inventory: [], 
             isSpinning: false, isBoost: false, wheelDeg: 0, isMuted: false,
-            luckExpiry: 0, // NEW: Admin Potion Timer
+            luckExpiry: 0,
             stats: { totalSpins: 0, pityCounter: 0, mutationPity: 0 }
         };
 
         const getImg = (n,c) => `https://placehold.co/100/${c.replace('#','')}/ffffff?text=${n.substring(0,2)}`;
 
-        function loadData() {
-            const saved = localStorage.getItem('casinoData_v3');
+        // --- FUNGSI HARGA PUSAT (SUPAYA KONSISTEN) ---
+        function calculatePrice(rank, mutation, baseCash) {
+            let finalCash = baseCash;
+            let shinyBonus = 0;
+            let glitchBonus = 0;
+
+            // --- LOGIKA HARGA UPDATE ---
+            // Ubah angka di sini, otomatis semua item lama ikut berubah
+            if (rank === 5) { shinyBonus = 500000; glitchBonus = 5000000; } 
+            else if (rank === 4) { shinyBonus = 25000; glitchBonus = 50000; } 
+            else if (rank === 3) { shinyBonus = 15000; glitchBonus = 20000; } 
+            else { shinyBonus = 5000; glitchBonus = 10000; }
+
+            if(mutation === "shiny") finalCash += shinyBonus; 
+            if(mutation === "glitch") finalCash += glitchBonus;
+
+            return finalCash;
+        }
+
+        function loadData(username) {
+            // Buat Key Unik berdasarkan Username
+            // Gunakan prefix 'casinoSave_' agar tidak bentrok
+            currentUserKey = 'casinoSave_' + username.trim().toLowerCase();
+            
+            const saved = localStorage.getItem(currentUserKey);
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
-                    // Merge saved state with default state to handle new fields
                     state = { ...state, ...parsed, stats: parsed.stats || { totalSpins: 0, pityCounter: 0, mutationPity: 0 } };
+                    
+                    // --- UPDATE HARGA INVENTORY LAMA (FORCE UPDATE) ---
+                    // Ini kuncinya: Memetakan ulang semua item di tas dengan rumus harga terbaru
+                    state.inventory = state.inventory.map(item => {
+                        // Ambil referensi item asli dari database ITEMS
+                        const baseRef = ITEMS.find(x => x.id === item.id) || item;
+                        // Hitung ulang harga pakai logic terbaru
+                        const newPrice = calculatePrice(baseRef.rank, item.mutation, baseRef.cashVal);
+                        
+                        return {
+                            ...item,
+                            coinVal: baseRef.coinVal, // Refresh harga koin
+                            cashVal: baseRef.cashVal, // Refresh harga base cash
+                            actualCash: newPrice      // Update harga jual total dengan rumus baru
+                        };
+                    });
+                    console.log(`Loaded data for: ${username}. Prices updated.`);
+                    // --------------------------------------------------
+
                     state.isSpinning = false;
                 } catch (e) { console.error("Corrupted Save"); }
+            } else {
+                console.log(`New user: ${username}. Starting fresh.`);
+                // Reset state ke default kalau user baru
+                state = {
+                    coins: 1000, saldo: 0, inventory: [], 
+                    isSpinning: false, isBoost: false, wheelDeg: 0, isMuted: false,
+                    luckExpiry: 0,
+                    stats: { totalSpins: 0, pityCounter: 0, mutationPity: 0 }
+                };
             }
         }
-        function saveData() { localStorage.setItem('casinoData_v3', JSON.stringify(state)); }
+
+        function saveData() { 
+            if(currentUserKey) localStorage.setItem(currentUserKey, JSON.stringify(state)); 
+        }
+
         function hardReset() {
-            if(confirm("HARD RESET: Semua Koin, Saldo, Inventory, dan Pity Counter akan dihapus. Lanjut?")) {
-                localStorage.removeItem('casinoData_v3');
+            if(confirm(`HARD RESET: Data akun '${currentUserKey}' akan dihapus permanen. Lanjut?`)) {
+                localStorage.removeItem(currentUserKey);
                 location.reload();
             }
         }
 
-        /* --- 2. ADVANCED ACOUSTIC AUDIO ENGINE --- */
+        /* --- AUDIO & FX (SAMA SEPERTI SEBELUMNYA) --- */
         const AudioEngine = {
-            ctx: null, isPlaying: false,
-            gainNode: null,
-            tempo: 100, noteIndex: 0, nextNoteTime: 0,
-            noiseBuffer: null,
-
+            ctx: null, isPlaying: false, gainNode: null, tempo: 100, noteIndex: 0, nextNoteTime: 0, noiseBuffer: null,
             init: function() {
                 window.AudioContext = window.AudioContext || window.webkitAudioContext;
                 this.ctx = new AudioContext();
                 this.gainNode = this.ctx.createGain();
                 this.gainNode.connect(this.ctx.destination);
-                this.gainNode.gain.value = 0.5; // Master volume
-                
-                // Create Noise Buffer for "Crowd"
-                const bSize = this.ctx.sampleRate * 2; // 2 seconds
+                this.gainNode.gain.value = 0.5;
+                const bSize = this.ctx.sampleRate * 2;
                 this.noiseBuffer = this.ctx.createBuffer(1, bSize, this.ctx.sampleRate);
                 const data = this.noiseBuffer.getChannelData(0);
                 for (let i = 0; i < bSize; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
-
                 this.startMusic();
             },
-
-            // --- INSTRUMENT SYNTHESIS (PHYSICAL MODELING LITE) ---
-            
-            // 1. Piano: Triangle wave, medium decay, clean sound
             playPiano: function(time, freq, dur=1.5) {
-                const osc = this.ctx.createOscillator();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(freq, time);
-                const gain = this.ctx.createGain();
-                gain.gain.setValueAtTime(0, time);
-                gain.gain.linearRampToValueAtTime(0.3, time + 0.02); // Attack
-                gain.gain.exponentialRampToValueAtTime(0.01, time + dur); // Decay
-                osc.connect(gain); gain.connect(this.gainNode);
-                osc.start(time); osc.stop(time + dur);
+                const osc = this.ctx.createOscillator(); osc.type = 'triangle'; osc.frequency.setValueAtTime(freq, time);
+                const gain = this.ctx.createGain(); gain.gain.setValueAtTime(0, time);
+                gain.gain.linearRampToValueAtTime(0.3, time + 0.02); gain.gain.exponentialRampToValueAtTime(0.01, time + dur);
+                osc.connect(gain); gain.connect(this.gainNode); osc.start(time); osc.stop(time + dur);
             },
-
-            // 2. Acoustic Guitar: Sawtooth + LowPass Filter Envelope (Pluck effect)
             playGuitar: function(time, freq) {
-                const osc = this.ctx.createOscillator();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(freq, time);
-                
-                const filter = this.ctx.createBiquadFilter();
-                filter.type = 'lowpass';
-                filter.Q.value = 1;
-                filter.frequency.setValueAtTime(3000, time);
-                filter.frequency.exponentialRampToValueAtTime(100, time + 0.3); // Pluck sound
-
-                const gain = this.ctx.createGain();
-                gain.gain.setValueAtTime(0, time);
-                gain.gain.linearRampToValueAtTime(0.2, time + 0.01);
-                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.4);
-
-                osc.connect(filter); filter.connect(gain); gain.connect(this.gainNode);
-                osc.start(time); osc.stop(time + 0.4);
+                const osc = this.ctx.createOscillator(); osc.type = 'sawtooth'; osc.frequency.setValueAtTime(freq, time);
+                const filter = this.ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.Q.value = 1;
+                filter.frequency.setValueAtTime(3000, time); filter.frequency.exponentialRampToValueAtTime(100, time + 0.3);
+                const gain = this.ctx.createGain(); gain.gain.setValueAtTime(0, time);
+                gain.gain.linearRampToValueAtTime(0.2, time + 0.01); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.4);
+                osc.connect(filter); filter.connect(gain); gain.connect(this.gainNode); osc.start(time); osc.stop(time + 0.4);
             },
-
-            // 3. Bass: Sine wave, deep and sustained
             playBass: function(time, freq) {
-                const osc = this.ctx.createOscillator();
-                osc.type = 'sine'; // Sine is cleaner for bass
-                osc.frequency.setValueAtTime(freq, time);
-                const gain = this.ctx.createGain();
-                gain.gain.setValueAtTime(0.3, time);
-                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
-                osc.connect(gain); gain.connect(this.gainNode);
-                osc.start(time); osc.stop(time + 0.6);
+                const osc = this.ctx.createOscillator(); osc.type = 'sine'; osc.frequency.setValueAtTime(freq, time);
+                const gain = this.ctx.createGain(); gain.gain.setValueAtTime(0.3, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+                osc.connect(gain); gain.connect(this.gainNode); osc.start(time); osc.stop(time + 0.6);
             },
-
-            // --- SEQUENCER ---
-            // Progression: C Major -> G Major -> A Minor -> F Major
-            // Bar: 4 beats. 16 steps per bar (16th notes).
             scheduler: function() {
-                const lookahead = 25.0; 
-                const scheduleAheadTime = 0.1;
-                while (this.nextNoteTime < this.ctx.currentTime + scheduleAheadTime) {
-                    this.scheduleNote(this.noteIndex, this.nextNoteTime);
-                    this.nextNote();
-                }
+                const lookahead = 25.0; const scheduleAheadTime = 0.1;
+                while (this.nextNoteTime < this.ctx.currentTime + scheduleAheadTime) { this.scheduleNote(this.noteIndex, this.nextNoteTime); this.nextNote(); }
                 if(this.isPlaying) window.setTimeout(()=>this.scheduler(), lookahead);
             },
-
-            nextNote: function() {
-                const secondsPerBeat = 60.0 / this.tempo;
-                this.nextNoteTime += 0.25 * secondsPerBeat;
-                this.noteIndex++;
-            },
-
+            nextNote: function() { const secondsPerBeat = 60.0 / this.tempo; this.nextNoteTime += 0.25 * secondsPerBeat; this.noteIndex++; },
             scheduleNote: function(step, time) {
                 if(state.isMuted) return;
-
-                // 64 steps total for 4 bars (16 steps * 4 chords)
-                const loopStep = step % 64; 
-                const bar = Math.floor(loopStep / 16); // 0=C, 1=G, 2=Am, 3=F
-                const beat = loopStep % 16;
-
-                // Chord Definitions (Root, Third, Fifth)
-                const chords = [
-                    [261.63, 329.63, 392.00], // C
-                    [196.00, 246.94, 293.66], // G
-                    [220.00, 261.63, 329.63], // Am
-                    [174.61, 220.00, 261.63]  // F
-                ];
-                const bassNotes = [130.81, 98.00, 110.00, 87.31]; // C3, G2, A2, F2
-
-                const currentChord = chords[bar];
-                const root = bassNotes[bar];
-
-                // Bass: Play on beat 0 and 10 (syncopated)
-                if(beat === 0) this.playBass(time, root);
-                if(beat === 10) this.playBass(time, root);
-
-                // Piano: Strum chord on beat 0, Arp on beat 4, 8, 12
-                if(beat === 0) {
-                    currentChord.forEach((f, i) => this.playPiano(time + i*0.03, f, 2.0));
-                }
-                if(beat === 8) {
-                    // Soft chord pad
-                    currentChord.forEach(f => this.playPiano(time, f, 1.0));
-                }
-
-                // Guitar: Picking pattern (16th notes)
+                const loopStep = step % 64; const bar = Math.floor(loopStep / 16); const beat = loopStep % 16;
+                const chords = [[261.63, 329.63, 392.00], [196.00, 246.94, 293.66], [220.00, 261.63, 329.63], [174.61, 220.00, 261.63]];
+                const bassNotes = [130.81, 98.00, 110.00, 87.31];
+                const currentChord = chords[bar]; const root = bassNotes[bar];
+                if(beat === 0 || beat === 10) this.playBass(time, root);
+                if(beat === 0) currentChord.forEach((f, i) => this.playPiano(time + i*0.03, f, 2.0));
+                if(beat === 8) currentChord.forEach(f => this.playPiano(time, f, 1.0));
                 const pickPattern = [0, null, 1, null, 2, null, 1, null, 0, null, 1, null, 2, 1, null, null];
-                if(pickPattern[beat] !== null && pickPattern[beat] !== undefined) {
-                    // Randomize timing slightly for human feel
-                    this.playGuitar(time + (Math.random()*0.02), currentChord[pickPattern[beat]] * 2); // An octave higher
-                }
+                if(pickPattern[beat] !== null && pickPattern[beat] !== undefined) this.playGuitar(time + (Math.random()*0.02), currentChord[pickPattern[beat]] * 2);
             },
-
-            startMusic: function() {
-                if(this.isPlaying) return;
-                this.isPlaying = true;
-                this.noteIndex = 0;
-                this.nextNoteTime = this.ctx.currentTime + 0.1;
-                this.scheduler();
-            },
+            startMusic: function() { if(this.isPlaying) return; this.isPlaying = true; this.noteIndex = 0; this.nextNoteTime = this.ctx.currentTime + 0.1; this.scheduler(); },
             stopMusic: function() { this.isPlaying = false; },
-
-            // --- SFX LIBRARY ---
             playSFX: function(type) {
                 if(state.isMuted) return;
                 const t = this.ctx.currentTime;
-                
                 if(type === 'click') {
-                    // Woodblock style click
-                    const osc = this.ctx.createOscillator();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(800, t);
-                    const gain = this.ctx.createGain();
-                    gain.gain.setValueAtTime(0.3, t);
-                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
-                    osc.connect(gain); gain.connect(this.ctx.destination);
-                    osc.start(t); osc.stop(t+0.1);
+                    const osc = this.ctx.createOscillator(); osc.type = 'sine'; osc.frequency.setValueAtTime(800, t);
+                    const gain = this.ctx.createGain(); gain.gain.setValueAtTime(0.3, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+                    osc.connect(gain); gain.connect(this.ctx.destination); osc.start(t); osc.stop(t+0.1);
                 }
-                
                 if(type === 'spin') {
-                    // Card shuffling sound
-                    const bufferSize = this.ctx.sampleRate * 0.05;
-                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-                    const data = buffer.getChannelData(0);
-                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-                    const noise = this.ctx.createBufferSource();
-                    noise.buffer = buffer;
-                    const gain = this.ctx.createGain();
-                    gain.gain.setValueAtTime(0.1, t);
-                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
-                    noise.connect(gain); gain.connect(this.ctx.destination);
-                    noise.start(t);
+                    const bufferSize = this.ctx.sampleRate * 0.05; const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                    const noise = this.ctx.createBufferSource(); noise.buffer = buffer;
+                    const gain = this.ctx.createGain(); gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+                    noise.connect(gain); gain.connect(this.ctx.destination); noise.start(t);
                 }
-
                 if(type === 'cash') {
-                    // High pitch ping (Register sound)
-                    const osc = this.ctx.createOscillator();
-                    osc.type = 'sine'; osc.frequency.setValueAtTime(2000, t);
-                    const gain = this.ctx.createGain();
-                    gain.gain.setValueAtTime(0.2, t);
-                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
-                    osc.connect(gain); gain.connect(this.ctx.destination);
-                    osc.start(t); osc.stop(t+0.5);
-                    setTimeout(()=>{
-                        const osc2 = this.ctx.createOscillator();
-                        osc2.type = 'sine'; osc2.frequency.setValueAtTime(2500, t+0.1);
-                        const gain2 = this.ctx.createGain();
-                        gain2.gain.setValueAtTime(0.2, t+0.1);
-                        gain2.gain.exponentialRampToValueAtTime(0.01, t+0.4);
-                        osc2.connect(gain2); gain2.connect(this.ctx.destination);
-                        osc2.start(t+0.1); osc2.stop(t+0.4);
-                    }, 80);
+                    const osc = this.ctx.createOscillator(); osc.type = 'sine'; osc.frequency.setValueAtTime(2000, t);
+                    const gain = this.ctx.createGain(); gain.gain.setValueAtTime(0.2, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+                    osc.connect(gain); gain.connect(this.ctx.destination); osc.start(t); osc.stop(t+0.5);
                 }
-
                 if(type === 'crowd_cheer') {
-                    // Crowd Cheer Simulation using Filtered Noise
-                    const dur = 2.0;
-                    const noise = this.ctx.createBufferSource();
-                    noise.buffer = this.noiseBuffer;
-                    noise.loop = true;
-                    
-                    // Bandpass filter to make it sound like voices
-                    const filter = this.ctx.createBiquadFilter();
-                    filter.type = 'bandpass';
-                    filter.frequency.setValueAtTime(500, t);
-                    filter.Q.value = 0.5;
-
-                    const gain = this.ctx.createGain();
-                    gain.gain.setValueAtTime(0, t);
-                    gain.gain.linearRampToValueAtTime(0.5, t + 0.2); // Fade in
-                    gain.gain.linearRampToValueAtTime(0, t + dur); // Fade out
-
-                    noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-                    noise.start(t); noise.stop(t + dur);
-
-                    // Add Fanfare (Trumpets)
-                    const trumpets = [523.25, 659.25, 783.99, 1046.50]; // C Major
+                    const dur = 2.0; const noise = this.ctx.createBufferSource(); noise.buffer = this.noiseBuffer; noise.loop = true;
+                    const filter = this.ctx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.setValueAtTime(500, t); filter.Q.value = 0.5;
+                    const gain = this.ctx.createGain(); gain.gain.setValueAtTime(0, t); gain.gain.linearRampToValueAtTime(0.5, t + 0.2); gain.gain.linearRampToValueAtTime(0, t + dur);
+                    noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination); noise.start(t); noise.stop(t + dur);
+                    const trumpets = [523.25, 659.25, 783.99, 1046.50];
                     trumpets.forEach((f, i) => {
-                        const osc = this.ctx.createOscillator();
-                        osc.type = 'sawtooth';
-                        osc.frequency.setValueAtTime(f, t);
-                        const tGain = this.ctx.createGain();
-                        tGain.gain.setValueAtTime(0.1, t);
-                        tGain.gain.exponentialRampToValueAtTime(0.01, t + 1.5);
-                        osc.connect(tGain); tGain.connect(this.ctx.destination);
-                        osc.start(t); osc.stop(t+1.5);
+                        const osc = this.ctx.createOscillator(); osc.type = 'sawtooth'; osc.frequency.setValueAtTime(f, t);
+                        const tGain = this.ctx.createGain(); tGain.gain.setValueAtTime(0.1, t); tGain.gain.exponentialRampToValueAtTime(0.01, t + 1.5);
+                        osc.connect(tGain); tGain.connect(this.ctx.destination); osc.start(t); osc.stop(t+1.5);
                     });
                 }
             }
         };
 
-        /* --- 3. PARTICLE FX --- */
         const FX = {
-            canvas: document.getElementById('fxCanvas'),
-            ctx: document.getElementById('fxCanvas').getContext('2d'),
-            particles: [],
+            canvas: document.getElementById('fxCanvas'), ctx: document.getElementById('fxCanvas').getContext('2d'), particles: [],
             loop: function() {
                 this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight;
                 this.ctx.clearRect(0,0, this.canvas.width, this.canvas.height);
@@ -621,16 +537,22 @@
                 }
                 this.ctx.globalAlpha=1; requestAnimationFrame(()=>this.loop());
             },
-            explode: function(x,y,c,amt=30) {
-                for(let i=0;i<amt;i++) this.particles.push({x:x,y:y,vx:(Math.random()-0.5)*15,vy:(Math.random()-0.5)*15,life:1,color:c,size:Math.random()*6});
-            }
+            explode: function(x,y,c,amt=30) { for(let i=0;i<amt;i++) this.particles.push({x:x,y:y,vx:(Math.random()-0.5)*15,vy:(Math.random()-0.5)*15,life:1,color:c,size:Math.random()*6}); }
         };
         FX.loop();
 
-        /* --- 4. GAME LOGIC --- */
+        /* --- GAME LOGIC --- */
         function initSystem() {
-            loadData();
+            // AMBIL INPUT USERNAME DARI PROMPT (Sederhana & Efektif)
+            let username = prompt("MASUKKAN ID / NAMA AKUN:\n(Gunakan nama yg sama untuk load akun lama, nama baru untuk reset)", "");
+            
+            if(!username || username.trim() === "") username = "Guest";
+            
+            loadData(username); // Load data spesifik username ini
+            
             document.getElementById('startOverlay').style.display = 'none';
+            document.getElementById('userBadge').innerText = username.toUpperCase();
+            
             AudioEngine.init();
             renderWheel();
             updateUI();
@@ -644,74 +566,32 @@
             if(state.isBoost) AudioEngine.playSFX('click');
         }
 
-                function rollItem() {
+        function rollItem() {
             let pool = JSON.parse(JSON.stringify(ITEMS));
-            
-            // --- 1. ADMIN POTION CHECK ---
             const isGodMode = Date.now() < state.luckExpiry;
 
-            // --- 2. MANIPULASI WEIGHT (PROBABILITAS) ---
-            // Boost Button
             if(state.isBoost) pool.forEach(i => { if(i.rank >= 3) i.weight *= 20; }); 
-            // Pity System
             if(state.stats.pityCounter >= 100) pool.forEach(i => { if(i.rank >= 3) i.weight *= 5; });
             if(state.stats.mutationPity >= 1000000) pool.forEach(i => { if(i.rank >= 4) i.weight *= 50; });
+            if (isGodMode) { pool.forEach(i => { if (i.rank === 4) i.weight += 10000000; if (i.rank === 5) i.weight += 10000000; }); }
 
-            // Potion Logic (God Mode)
-            if (isGodMode) {
-                pool.forEach(i => {
-                    if (i.rank === 4) i.weight += 10000000; 
-                    if (i.rank === 5) i.weight += 10000000; 
-                });
-            }
-
-            // --- 3. ROLL RNG ---
             let total = pool.reduce((a,b)=>a+b.weight,0), r = Math.random()*total, item = pool[0];
             for(let i of pool) { if(r<i.weight) { item = i; break; } r-=i.weight; }
             
-            // --- 4. MUTATION RNG ---
             let mut = null;
             let mutationChance = (state.stats.mutationPity >= 1000000 && item.rank >= 3) ? 0.40 : 0.05;
             let glitchChance = (state.stats.mutationPity >= 1000000 && item.rank >= 3) ? 0.30 : 0.10;
-
-            if (isGodMode) { mutationChance = 0.5; glitchChance = 0.4; } // Boost mutation chance saat potion aktif
+            if (isGodMode) { mutationChance = 0.5; glitchChance = 0.4; }
 
             if(Math.random() < mutationChance) mut = "shiny"; 
             if(item.rank >= 4 && Math.random() < glitchChance) mut = "glitch"; 
             
-            // --- 5. UPDATE STATS ---
             state.stats.totalSpins++; state.stats.pityCounter++; state.stats.mutationPity++;
             if(item.rank >= 3) state.stats.pityCounter = 0;
             if(item.rank >= 3 && mut !== null) state.stats.mutationPity = 0;
 
-            // --- 6. HARGA JUAL BERTINGKAT (SCALING PRICE) ---
-            let finalCash = item.cashVal; // Harga dasar
-            let shinyBonus = 0;
-            let glitchBonus = 0;
-
-            if (item.rank === 5) {
-                // TIER 5: JOKER (JACKPOT UTAMA)
-                shinyBonus = 500000;    // +500 K
-                glitchBonus = 5000000;  // +5 Juta (AUTO KAYA)
-            } 
-            else if (item.rank === 4) {
-                // TIER 4: DRAGON/PHOENIX (HIGH TIER)
-                shinyBonus = 25000;     // +25 K
-                glitchBonus = 50000;   // +50 K (Lumayan)
-            } 
-            else if (item.rank === 3) {
-                // TIER 3: EXCALIBUR (MID TIER)
-                shinyBonus = 15000;      // +15 K
-                glitchBonus = 20000;    // +20 K (Receh)
-            } 
-            else {
-                // TIER SAMPAH (0-2)
-                shinyBonus = 5000;       // +5 K
-                glitchBonus = 10000;     // +10 K
-            }
-
-            if(mut === "shiny") finalCash += shinyBonus; 
-            if(mut === "glitch") finalCash += glitchBonus; 
+            // PANGGIL LOGIKA HARGA PUSAT
+            let finalCash = calculatePrice(item.rank, mut, item.cashVal);
 
             return { 
                 ...ITEMS.find(x=>x.id===item.id), 
@@ -722,11 +602,9 @@
             };
         }
 
-
         function spin(multiplier) {
             let cost = (multiplier * 100) + (state.isBoost ? 5000 : 0);
             if(state.coins < cost) { alert("Koin Habis! Top Up dulu bos."); openShop(); return; }
-
             state.coins -= cost; saveData(); updateUI();
             state.isSpinning = true;
             document.querySelectorAll('.btn').forEach(b=>b.disabled=true);
@@ -739,7 +617,7 @@
             w.style.transition = "transform 5.5s cubic-bezier(0.2, 0, 0.1, 1)";
             w.style.transform = `rotate(${state.wheelDeg}deg)`;
 
-            let intv = setInterval(()=>AudioEngine.playSFX('spin'), 80); // Card shuffle sound
+            let intv = setInterval(()=>AudioEngine.playSFX('spin'), 80);
 
             setTimeout(() => {
                 clearInterval(intv);
@@ -750,32 +628,18 @@
         }
 
         async function showResults(items) {
-            const layer = document.getElementById('popupLayer');
-            const stage = document.getElementById('resultStage');
+            const layer = document.getElementById('popupLayer'); const stage = document.getElementById('resultStage');
             const btn = document.getElementById('collectBtn');
             layer.classList.add('active'); stage.innerHTML = ''; btn.classList.remove('show');
-
             for(let i=0; i<items.length; i++) {
-                const item = items[i];
-                state.inventory.push(item);
+                const item = items[i]; state.inventory.push(item);
                 const div = document.createElement('div');
                 div.className = `card tier-${item.rank} ${item.mutation?'mut-'+item.mutation:''}`;
-                div.innerHTML = `
-                    <div style="font-weight:900; color:#${item.color}">TIER ${item.rank}</div>
-                    <img src="${getImg(item.name, item.color)}">
-                    <h3 style="color:#${item.color}">${item.name}</h3>
-                    ${item.mutation ? `<div class="card-mutation-badge" style="background:${item.mutation==='shiny'?'gold':'#f0f'}; color:black">${item.mutation}</div>`:''}
-                `;
+                div.innerHTML = `<div style="font-weight:900; color:#${item.color}">TIER ${item.rank}</div><img src="${getImg(item.name, item.color)}"><h3 style="color:#${item.color}">${item.name}</h3>${item.mutation ? `<div class="card-mutation-badge" style="background:${item.mutation==='shiny'?'gold':'#f0f'}; color:black">${item.mutation}</div>`:''}`;
                 stage.appendChild(div); stage.scrollLeft = stage.scrollWidth;
                 div.offsetWidth; div.classList.add('reveal');
-                
-                if(item.rank >= 3) {
-                    AudioEngine.playSFX('crowd_cheer'); 
-                    if(item.rank >= 4) FX.explode(window.innerWidth/2, window.innerHeight/2, item.color); 
-                } else {
-                    AudioEngine.playSFX('click');
-                }
-
+                if(item.rank >= 3) { AudioEngine.playSFX('crowd_cheer'); if(item.rank >= 4) FX.explode(window.innerWidth/2, window.innerHeight/2, item.color); } 
+                else { AudioEngine.playSFX('click'); }
                 await new Promise(r => setTimeout(r, 600)); 
             }
             saveData(); btn.classList.add('show');
@@ -783,15 +647,10 @@
 
         function closePopup() { document.getElementById('popupLayer').classList.remove('active'); }
         function renderWheel() {
-            const w = document.getElementById('wheel'); const deg = 360/ITEMS.length;
-            ITEMS.forEach((it,i)=>{
-                const e = document.createElement('div'); e.className='segment'; e.style.transform=`rotate(${i*deg}deg)`;
-                e.innerHTML=`<img src="${getImg(it.name,it.color)}">`;
-                w.appendChild(e);
-            });
+            const w = document.getElementById('wheel'); const deg = 360/ITEMS.length; w.innerHTML = '';
+            ITEMS.forEach((it,i)=>{ const e = document.createElement('div'); e.className='segment'; e.style.transform=`rotate(${i*deg}deg)`; e.innerHTML=`<img src="${getImg(it.name,it.color)}">`; w.appendChild(e); });
         }
 
-        /* --- 5. INVENTORY & INSPECTOR --- */
         function openInv() { document.getElementById('modalInv').classList.add('open'); renderInv(); }
         function renderInv() {
             document.getElementById('invCount').innerText = state.inventory.length;
@@ -802,40 +661,22 @@
                 div.className = `inv-item ${item.locked ? 'locked' : ''}`;
                 div.style.borderColor = item.locked ? '#e74c3c' : `#${item.color}`;
                 div.onclick = () => openInspector(item);
-                div.innerHTML = `
-                    <div class="inv-lock-icon">🔒</div>
-                    <img src="${getImg(item.name, item.color)}" style="width:40px;">
-                    <div style="font-size:0.6rem; color:#${item.color}">T${item.rank}</div>
-                `;
+                div.innerHTML = `<div class="inv-lock-icon">🔒</div><img src="${getImg(item.name, item.color)}" style="width:40px;"><div style="font-size:0.6rem; color:#${item.color}">T${item.rank}</div>`;
                 grid.appendChild(div);
             });
         }
 
         function openInspector(item) {
-            const modal = document.getElementById('modalInspector');
-            const body = document.getElementById('inspectorBody');
+            const modal = document.getElementById('modalInspector'); const body = document.getElementById('inspectorBody');
             modal.classList.add('open');
             const canSellForCash = item.rank >= 3 || item.mutation;
             const sellVal = canSellForCash ? (item.actualCash || item.cashVal) : item.coinVal;
             const sellCurrency = canSellForCash ? 'SALDO 💵' : 'KOIN 🪙';
             const btnClass = canSellForCash ? 'act-sell-cash' : 'act-sell-coin';
-
-            body.innerHTML = `
-                <img src="${getImg(item.name, item.color)}" class="inspector-img" style="border:2px solid #${item.color}; border-radius:10px; padding:5px;">
-                <h2 style="color:#${item.color}; margin:0;">${item.name}</h2>
-                <p style="color:#888; font-size:0.8rem; margin:5px 0;">Tier ${item.rank} • ${item.mutation ? item.mutation.toUpperCase() : 'Normal'}</p>
-                <div class="action-row">
-                    <button class="act-btn act-lock" onclick="doLock('${item.uid}')">${item.locked ? '🔓 UNLOCK' : '🔒 LOCK'}</button>
-                    ${!item.locked ? `<button class="act-btn ${btnClass}" onclick="doSell('${item.uid}', ${canSellForCash})">JUAL: ${sellVal.toLocaleString()} ${sellCurrency}</button>` : ''}
-                </div>
-            `;
+            body.innerHTML = `<img src="${getImg(item.name, item.color)}" class="inspector-img" style="border:2px solid #${item.color}; border-radius:10px; padding:5px;"><h2 style="color:#${item.color}; margin:0;">${item.name}</h2><p style="color:#888; font-size:0.8rem; margin:5px 0;">Tier ${item.rank} • ${item.mutation ? item.mutation.toUpperCase() : 'Normal'}</p><div class="action-row"><button class="act-btn act-lock" onclick="doLock('${item.uid}')">${item.locked ? '🔓 UNLOCK' : '🔒 LOCK'}</button>${!item.locked ? `<button class="act-btn ${btnClass}" onclick="doSell('${item.uid}', ${canSellForCash})">JUAL: ${sellVal.toLocaleString()} ${sellCurrency}</button>` : ''}</div>`;
         }
 
-        function doLock(uid) {
-            const item = state.inventory.find(i=>i.uid == uid);
-            if(item) { item.locked = !item.locked; saveData(); renderInv(); openInspector(item); AudioEngine.playSFX('click'); }
-        }
-
+        function doLock(uid) { const item = state.inventory.find(i=>i.uid == uid); if(item) { item.locked = !item.locked; saveData(); renderInv(); openInspector(item); AudioEngine.playSFX('click'); } }
         function doSell(uid, isCash) {
             const idx = state.inventory.findIndex(i=>i.uid == uid);
             if(idx > -1) {
@@ -848,35 +689,25 @@
                 if(isCash) FX.explode(window.innerWidth/2, window.innerHeight/2, '#00ff88');
             }
         }
-
         function sellTrash() {
             const trash = state.inventory.filter(i => !i.locked && i.rank < 3);
             if(trash.length === 0) return alert("Kosong bos.");
             let total = 0; trash.forEach(i => total += i.coinVal);
             if(confirm(`Jual ${trash.length} item sampah seharga ${total.toLocaleString()} Koin?`)) {
-                state.coins += total;
-                state.inventory = state.inventory.filter(i => i.locked || i.rank >= 3);
+                state.coins += total; state.inventory = state.inventory.filter(i => i.locked || i.rank >= 3);
                 saveData(); updateUI(); renderInv(); AudioEngine.playSFX('cash');
             }
         }
 
-        /* --- 6. SHOP & UTILS --- */
         function updateUI() { 
             document.getElementById('uiCoins').innerText = state.coins.toLocaleString(); 
             document.getElementById('uiSaldo').innerText = state.saldo.toLocaleString(); 
-            
-            // UI Handler untuk Timer Potion (Visibility Only)
             const timerDiv = document.getElementById('potionTimer');
-            if (Date.now() < state.luckExpiry) {
-                timerDiv.style.display = 'block';
-            } else {
-                timerDiv.style.display = 'none';
-            }
+            if (Date.now() < state.luckExpiry) { timerDiv.style.display = 'block'; } else { timerDiv.style.display = 'none'; }
         }
         
         function openShop() { document.getElementById('modalShop').classList.add('open'); }
         function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
         let pendingTx = null;
         function confirmBuy(type, gain, cost) {
             if(type === 'coins' && state.saldo < cost) return alert("Saldo kurang.");
@@ -886,7 +717,6 @@
             document.getElementById('confirmActions').style.display = 'flex';
             document.getElementById('loadingView').style.display = 'none';
         }
-
         document.getElementById('btnConfirmBuy').onclick = function() {
             document.getElementById('confirmActions').style.display = 'none';
             document.getElementById('loadingView').style.display = 'flex';
@@ -900,37 +730,17 @@
 
         function redeemCode() {
             const input = document.getElementById('cheatInput').value;
-            if(input === 'ENGGACOR') {
-                state.saldo += 100000000; alert("CHEAT: +100M Saldo"); saveData(); updateUI(); closeModal('modalShop');
-            } else if (input === 'POTIONDARIENG') {
-                // Set Expiry 1 Menit dari sekarang
-                state.luckExpiry = Date.now() + (1 * 60 * 1000);
-                alert("ADMIN POTION AKTIF: Luck +20JT selama 1 Menit!");
-                saveData(); updateUI(); closeModal('modalShop');
-                AudioEngine.playSFX('crowd_cheer');
-            } else {
-                alert("Salah kode.");
-            }
+            if(input === 'ENGGACOR') { state.saldo += 100000000; alert("CHEAT: +100M Saldo"); saveData(); updateUI(); closeModal('modalShop'); } 
+            else if (input === 'POTIONDARIENG') { state.luckExpiry = Date.now() + (1 * 60 * 1000); alert("ADMIN POTION AKTIF: Luck +20JT selama 1 Menit!"); saveData(); updateUI(); closeModal('modalShop'); AudioEngine.playSFX('crowd_cheer'); } 
+            else { alert("Salah kode."); }
         }
-
-        function toggleMute() {
-            state.isMuted = !state.isMuted;
-            document.getElementById('sfxToggle').innerText = state.isMuted ? '🔇' : '🔊';
-            state.isMuted ? AudioEngine.stopMusic() : AudioEngine.startMusic();
-            saveData();
-        }
-
-        // GLOBAL TIMER LOOP
+        function toggleMute() { state.isMuted = !state.isMuted; document.getElementById('sfxToggle').innerText = state.isMuted ? '🔇' : '🔊'; state.isMuted ? AudioEngine.stopMusic() : AudioEngine.startMusic(); saveData(); }
         setInterval(() => {
             if (state.luckExpiry > Date.now()) {
                 const diff = state.luckExpiry - Date.now();
-                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const s = Math.floor((diff % (1000 * 60)) / 1000);
-                document.getElementById('timerVal').innerText = `${m}:${s < 10 ? '0'+s : s}`;
-                document.getElementById('potionTimer').style.display = 'block';
-            } else {
-                document.getElementById('potionTimer').style.display = 'none';
-            }
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)); const s = Math.floor((diff % (1000 * 60)) / 1000);
+                document.getElementById('timerVal').innerText = `${m}:${s < 10 ? '0'+s : s}`; document.getElementById('potionTimer').style.display = 'block';
+            } else { document.getElementById('potionTimer').style.display = 'none'; }
         }, 1000);
     </script>
 </body>
