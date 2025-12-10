@@ -644,47 +644,84 @@
             if(state.isBoost) AudioEngine.playSFX('click');
         }
 
-        function rollItem() {
+                function rollItem() {
             let pool = JSON.parse(JSON.stringify(ITEMS));
             
-            // --- NEW: ADMIN POTION LOGIC ---
+            // --- 1. ADMIN POTION CHECK ---
             const isGodMode = Date.now() < state.luckExpiry;
 
-            // Logika Weight Standar
+            // --- 2. MANIPULASI WEIGHT (PROBABILITAS) ---
+            // Boost Button
             if(state.isBoost) pool.forEach(i => { if(i.rank >= 3) i.weight *= 20; }); 
+            // Pity System
             if(state.stats.pityCounter >= 100) pool.forEach(i => { if(i.rank >= 3) i.weight *= 5; });
             if(state.stats.mutationPity >= 1000000) pool.forEach(i => { if(i.rank >= 4) i.weight *= 50; });
 
-            // LOGIKA BRUTAL POTION (20 Juta Luck)
+            // Potion Logic (God Mode)
             if (isGodMode) {
                 pool.forEach(i => {
-                    if (i.rank === 4) i.weight += 10000000; // +10 Juta Weight Phoenix/Dragon
-                    if (i.rank === 5) i.weight += 10000000; // +10 Juta Weight Joker
+                    if (i.rank === 4) i.weight += 10000000; 
+                    if (i.rank === 5) i.weight += 10000000; 
                 });
             }
 
+            // --- 3. ROLL RNG ---
             let total = pool.reduce((a,b)=>a+b.weight,0), r = Math.random()*total, item = pool[0];
             for(let i of pool) { if(r<i.weight) { item = i; break; } r-=i.weight; }
             
+            // --- 4. MUTATION RNG ---
             let mut = null;
             let mutationChance = (state.stats.mutationPity >= 1000000 && item.rank >= 3) ? 0.40 : 0.05;
             let glitchChance = (state.stats.mutationPity >= 1000000 && item.rank >= 3) ? 0.30 : 0.10;
 
-            if (isGodMode) { mutationChance = 0.5; glitchChance = 0.4; } // Boost mutation juga
+            if (isGodMode) { mutationChance = 0.5; glitchChance = 0.4; } // Boost mutation chance saat potion aktif
 
             if(Math.random() < mutationChance) mut = "shiny"; 
             if(item.rank >= 4 && Math.random() < glitchChance) mut = "glitch"; 
             
+            // --- 5. UPDATE STATS ---
             state.stats.totalSpins++; state.stats.pityCounter++; state.stats.mutationPity++;
             if(item.rank >= 3) state.stats.pityCounter = 0;
             if(item.rank >= 3 && mut !== null) state.stats.mutationPity = 0;
 
-            let finalCash = item.cashVal;
-            if(mut === "shiny") finalCash += 500000; 
-            if(mut === "glitch") finalCash += 5000000; 
+            // --- 6. HARGA JUAL BERTINGKAT (SCALING PRICE) ---
+            let finalCash = item.cashVal; // Harga dasar
+            let shinyBonus = 0;
+            let glitchBonus = 0;
 
-            return { ...ITEMS.find(x=>x.id===item.id), uid: Date.now()+Math.random(), mutation: mut, locked: false, actualCash: finalCash };
+            if (item.rank === 5) {
+                // TIER 5: JOKER (JACKPOT UTAMA)
+                shinyBonus = 500000;    // +500 K
+                glitchBonus = 5000000;  // +5 Juta (AUTO KAYA)
+            } 
+            else if (item.rank === 4) {
+                // TIER 4: DRAGON/PHOENIX (HIGH TIER)
+                shinyBonus = 25000;     // +25 K
+                glitchBonus = 50000;   // +50 K (Lumayan)
+            } 
+            else if (item.rank === 3) {
+                // TIER 3: EXCALIBUR (MID TIER)
+                shinyBonus = 15000;      // +15 K
+                glitchBonus = 20000;    // +20 K (Receh)
+            } 
+            else {
+                // TIER SAMPAH (0-2)
+                shinyBonus = 5000;       // +5 K
+                glitchBonus = 10000;     // +10 K
+            }
+
+            if(mut === "shiny") finalCash += shinyBonus; 
+            if(mut === "glitch") finalCash += glitchBonus; 
+
+            return { 
+                ...ITEMS.find(x=>x.id===item.id), 
+                uid: Date.now()+Math.random(), 
+                mutation: mut, 
+                locked: false, 
+                actualCash: finalCash 
+            };
         }
+
 
         function spin(multiplier) {
             let cost = (multiplier * 100) + (state.isBoost ? 5000 : 0);
