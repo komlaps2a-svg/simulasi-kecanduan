@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GOD PERFECT: COLOR LOGIC V43</title>
+    <title>GOD PERFECT: TRUE THUNDER V7 - REVISED</title>
     <style>
         /* ===== VARIABLES ===== */
         :root {
@@ -14,6 +14,7 @@
             --joker: #a855f7;
             --dragon: #00ff00;
             --phoenix: #ff8c00;
+            --aura-color: #000;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -24,23 +25,29 @@
         }
 
         /* LAYERS */
-        .nebula-bg { position: fixed; inset: 0; z-index: -2; background: radial-gradient(circle at 50% 50%, #1a0b2e 0%, #000 90%); }
+        .nebula-bg { position: fixed; inset: 0; z-index: -2; background: radial-gradient(circle at 50% 40%, #1a0b2e 0%, #000 80%); }
         #particleCanvas { position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0.6; }
+        
+        /* LIGHTNING CANVAS (Z-Index tinggi agar di atas kegelapan) */
         #lightningCanvas { position: fixed; inset: 0; z-index: 200; pointer-events: none; mix-blend-mode: screen; }
         
-        /* DIMMING OVERLAY */
+        /* DIMMING OVERLAY (DARK AURA REVISED) */
         .dim-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0); z-index: 140; 
-            opacity: 0; transition: opacity 0.05s ease-out; pointer-events: none;
+            position: fixed; inset: 0; 
+            z-index: 140; 
+            opacity: 0; 
+            transition: opacity 0.1s ease-out;
+            pointer-events: none;
+            background: #000; /* Fallback */
         }
-        .dim-overlay.active { opacity: 0.7; }
+        /* Saat aktif, dia hitam pekat di pinggir, bolong di tengah */
+        .dim-overlay.active { opacity: 1.0; } 
 
-        /* START & LOGIN */
+        /* UI ELEMENTS */
         #startScreen, #loginScreen { position: fixed; inset: 0; z-index: 9999; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         #loginScreen { background: rgba(0,0,0,0.95); z-index: 5000; display: none; backdrop-filter: blur(10px); }
         .btn-start { padding: 20px 50px; font-size: 1.5rem; font-weight: 900; background: linear-gradient(45deg, var(--demon), #500); color: #fff; border: 3px solid #fff; border-radius: 50px; box-shadow: 0 0 50px var(--demon); cursor: pointer; animation: pulse 1s infinite; }
 
-        /* LOGIN UI */
         .login-card { width: 90%; max-width: 380px; background: linear-gradient(145deg, #111, #050505); border: 1px solid #333; border-top: 4px solid var(--gold); border-radius: 15px; padding: 40px 30px; box-shadow: 0 0 60px rgba(0,0,0,0.8), 0 0 15px rgba(255, 215, 0, 0.1); text-align: center; position: relative; overflow: hidden; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .login-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
         .login-title { font-size: 2rem; font-weight: 900; letter-spacing: 2px; color: #fff; margin-bottom: 5px; text-shadow: 0 0 20px rgba(255,255,255,0.2); text-transform: uppercase; }
@@ -55,7 +62,7 @@
         .btn-guest { width: 100%; padding: 12px; background: transparent; border: 1px solid #444; color: #888; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
         .btn-guest:hover { border-color: #fff; color: #fff; background: #111; }
 
-        /* MAIN UI - Z-INDEX 4000 */
+        /* TOP BAR */
         .top-bar { width: 100%; max-width: 600px; padding: 15px; background: linear-gradient(180deg, #222, #111); border-bottom: 2px solid #444; display: flex; justify-content: space-between; align-items: center; z-index: 4000; box-shadow: 0 5px 20px #000; gap: 10px; }
         .profile-pill { background: #000; border: 1px solid #333; padding: 8px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; box-shadow: inset 0 0 10px #111; color: #fff; cursor: pointer; transition: 0.2s; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .profile-pill.guest { border-color: var(--demon); color: #aaa; } .profile-pill.user { border-color: var(--gold); color: var(--gold); } .profile-pill:active { transform: scale(0.95); }
@@ -63,34 +70,45 @@
         .stat-pill { background: #000; border: 1px solid #333; padding: 8px 10px; border-radius: 8px; font-weight: bold; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; box-shadow: inset 0 0 10px #111; }
         .btn-icon { background: #333; border: 1px solid #555; color: #fff; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
-        /* SYSTEM ALERT & MODALS */
+        /* ALERTS & MODALS */
         #systemAlert { position: fixed; inset: 0; z-index: 99999; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; }
         .alert-box { width: 320px; background: #0f0f0f; border: 1px solid #333; border-left: 4px solid var(--glitch); padding: 25px; border-radius: 8px; box-shadow: 0 0 50px rgba(0,255,255,0.1); transform: scale(0.9); animation: popIn 0.2s forwards; position: relative; }
         .alert-icon { font-size: 2rem; margin-bottom: 10px; }
         .alert-head { color: var(--glitch); font-size: 0.8rem; font-weight: 900; letter-spacing: 2px; margin-bottom: 10px; }
         .alert-msg { color: #fff; font-size: 1rem; line-height: 1.5; margin-bottom: 25px; }
-        .btn-alert { width: 100%; padding: 12px; background: var(--glitch); color: #000; border: none; font-weight: 900; cursor: pointer; text-transform: uppercase; border-radius: 4px; }
-        
-        #confirmModal { position: fixed; inset: 0; z-index: 6000; background: rgba(0,0,0,0.9); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; }
-        .confirm-box { width: 300px; background: linear-gradient(135deg, #222, #000); border: 2px solid var(--gold); border-radius: 15px; padding: 25px; text-align: center; box-shadow: 0 0 30px rgba(255, 215, 0, 0.2); transform: scale(0.9); animation: popIn 0.2s forwards; }
+        .alert-btn-group { display: flex; gap: 10px; }
+        .btn-alert { flex: 1; padding: 12px; background: var(--glitch); color: #000; border: none; font-weight: 900; cursor: pointer; text-transform: uppercase; border-radius: 4px; }
+        .btn-alert-cancel { flex: 1; padding: 12px; background: #333; color: #fff; border: 1px solid #555; font-weight: 900; cursor: pointer; text-transform: uppercase; border-radius: 4px; display: none; }
+        .btn-alert-cancel:hover { background: #444; }
+
+        #confirmModal, #sellModal { position: fixed; inset: 0; z-index: 6000; background: rgba(0,0,0,0.9); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; }
+        .confirm-box, .sell-box { width: 300px; background: linear-gradient(135deg, #222, #000); border: 2px solid var(--gold); border-radius: 15px; padding: 25px; text-align: center; box-shadow: 0 0 30px rgba(255, 215, 0, 0.2); transform: scale(0.9); animation: popIn 0.2s forwards; }
+        .sell-box { background: linear-gradient(135deg, #200, #000); border-color: var(--demon); box-shadow: 0 0 50px rgba(255, 0, 60, 0.3); }
         .confirm-title { color: var(--gold); font-size: 1.2rem; font-weight: 900; margin-bottom: 10px; text-transform: uppercase; }
+        .sell-title { color: var(--demon); font-size: 1.2rem; font-weight: 900; margin-bottom: 10px; text-transform: uppercase; }
         .confirm-msg { color: #ccc; margin-bottom: 25px; font-size: 0.9rem; line-height: 1.4; }
         .confirm-actions { display: flex; gap: 10px; }
         .btn-yes { flex: 1; background: var(--gold); color: #000; border: none; padding: 12px; font-weight: 800; border-radius: 8px; cursor: pointer; }
+        .btn-sell-yes { flex: 1; background: var(--demon); color: #fff; border: none; padding: 12px; font-weight: 800; border-radius: 8px; cursor: pointer; }
         .btn-no { flex: 1; background: #333; color: #fff; border: 1px solid #555; padding: 12px; font-weight: 800; border-radius: 8px; cursor: pointer; }
 
-        /* SELL CONFIRM MODAL */
-        #sellModal { position: fixed; inset: 0; z-index: 8000; background: rgba(0,0,0,0.9); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; }
-        .sell-box { width: 300px; background: linear-gradient(135deg, #200, #000); border: 2px solid var(--demon); border-radius: 15px; padding: 25px; text-align: center; box-shadow: 0 0 50px rgba(255, 0, 60, 0.3); transform: scale(0.9); animation: popIn 0.2s forwards; }
-        .sell-title { color: var(--demon); font-size: 1.2rem; font-weight: 900; margin-bottom: 10px; text-transform: uppercase; }
-        .btn-sell-yes { flex: 1; background: var(--demon); color: #fff; border: none; padding: 12px; font-weight: 800; border-radius: 8px; cursor: pointer; }
+        /* MACHINE CASING */
+        .stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 5vh; position: relative; perspective: 1000px; width: 100%; z-index: 10; }
+        .machine-casing { position: relative; padding: 15px; width: 340px; background: linear-gradient(135deg, #2a2a2a 0%, #111 40%, #000 100%); border-radius: 20px; border: 4px solid #444; box-shadow: 0 0 0 5px #111, 0 0 0 8px #333, 0 0 60px rgba(0,0,0,0.8); margin-bottom: 20px; transition: 0.3s; z-index: 10; overflow: hidden; }
         
-        .stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 5vh; position: relative; perspective: 1000px; width: 100%; }
-        .machine-casing { position: relative; padding: 15px; width: 340px; background: linear-gradient(135deg, #2a2a2a 0%, #111 40%, #000 100%); border-radius: 20px; border: 4px solid #444; box-shadow: 0 0 0 5px #111, 0 0 0 8px #333, 0 0 60px rgba(0,0,0,0.8); margin-bottom: 20px; transition: 0.3s; z-index: 10; }
+        /* INNER GLOW (Tetap ada untuk efek aura mesin, tapi overlay layar beda) */
+        .machine-casing::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 100; border-radius: 15px; background: radial-gradient(circle at center, transparent 30%, var(--aura-color) 80%, #000 100%); opacity: 0; transition: opacity 0.2s ease-out; mix-blend-mode: hard-light; }
+        .machine-casing.aura-active::after { opacity: 1; animation: auraPulse 0.5s infinite alternate ease-in-out; }
+
+        @keyframes auraPulse { 0% { opacity: 0.8; transform: scale(1); filter: brightness(1); } 100% { opacity: 1.0; transform: scale(1.05); filter: brightness(1.5); } }
+
         .machine-casing.boost-active { border-color: var(--glitch); animation: boostPulse 1.5s infinite alternate; }
-        .machine-casing.god-active { border-color: var(--target-color) !important; box-shadow: 0 0 80px var(--target-color), inset 0 0 30px var(--target-color) !important; animation: shake 0.5s infinite !important; }
+        .machine-casing.god-active { border-color: var(--target-color) !important; box-shadow: 0 0 80px var(--target-color), inset 0 0 50px var(--target-color) !important; animation: shake 0.5s infinite !important; }
         .machine-casing.glow-demon { box-shadow: 0 0 60px var(--demon); border-color: var(--demon); }
-        .screw { position: absolute; width: 12px; height: 12px; background: radial-gradient(circle, #555, #222); border-radius: 50%; box-shadow: inset 0 0 2px #000; } .tl { top: 10px; left: 10px; } .tr { top: 10px; right: 10px; } .bl { bottom: 10px; left: 10px; } .br { bottom: 10px; right: 10px; }
+        
+        .screw { position: absolute; width: 12px; height: 12px; background: radial-gradient(circle, #555, #222); border-radius: 50%; box-shadow: inset 0 0 2px #000; z-index: 101; } 
+        .tl { top: 10px; left: 10px; } .tr { top: 10px; right: 10px; } .bl { bottom: 10px; left: 10px; } .br { bottom: 10px; right: 10px; }
+        
         .slot-window { width: 100%; height: 450px; background: #000; border: 4px solid #222; border-radius: 10px; box-shadow: inset 0 0 30px #000; display: flex; gap: 4px; padding: 4px; position: relative; overflow: hidden; }
         .payline { position: absolute; top: 50%; left: 0; right: 0; height: 4px; background: rgba(255,0,0,0.4); z-index: 20; transform: translateY(-50%); pointer-events: none; box-shadow: 0 0 10px red; }
         .reel { flex: 1; background: #080808; border-radius: 4px; border: 1px solid #1a1a1a; overflow: hidden; position: relative; mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent); }
@@ -98,14 +116,14 @@
         .slot-icon { height: 140px; width: 100%; display: flex; align-items: center; justify-content: center; font-size: 70px; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); }
         .blur-spin { filter: blur(4px); transform: scaleY(1.2); opacity: 0.8; }
         
-        .controls { display: grid; grid-template-columns: 1fr 100px 1fr; gap: 10px; width: 340px; align-items: end; position: relative; z-index: 10; }
+        .controls { display: grid; grid-template-columns: 1fr 100px 1fr; gap: 10px; width: 340px; align-items: end; position: relative; z-index: 150; }
         .btn-act { border: none; border-radius: 12px; color: #fff; cursor: pointer; font-weight: 800; text-transform: uppercase; box-shadow: 0 5px 0 #000; transition: 0.1s; } .btn-act:active { transform: translateY(5px); box-shadow: 0 0 0 #000; }
         .btn-boost { height: 60px; background: #333; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; } .btn-boost.active { background: linear-gradient(45deg, #06b6d4, #0891b2); color: #fff; box-shadow: 0 0 20px var(--glitch); border: 1px solid #fff; }
         .btn-spin { width: 90px; height: 90px; border-radius: 50%; margin: 0 auto; background: radial-gradient(circle at 30% 30%, var(--gold), #b8860b); border: 4px solid #8a6000; box-shadow: 0 0 50px rgba(255,215,0,0.2), 0 10px 0 #3e2b00; color: #221; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.1s; z-index: 10; } .btn-spin:active { transform: translateY(10px); box-shadow: 0 0 0 #3e2b00; } .btn-spin:disabled { filter: grayscale(1); cursor: not-allowed; }
         .btn-multi { height: 60px; background: linear-gradient(45deg, #7c3aed, #4c1d95); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2; }
 
-        /* POPUPS */
-        #jackpotPopup { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; animation: zoomIn 0.3s; }
+        /* POPUPS & PARTICLES */
+        #jackpotPopup { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; animation: zoomIn 0.3s; }
         .jackpot-text { font-size: 3rem; font-weight: 900; text-transform: uppercase; margin-bottom: 80px; text-shadow: 0 0 20px #fff; color: #fff; text-align: center; animation: pulse 0.2s infinite; position: relative; z-index: 20; }
         #jackpotCont { position: relative; display: flex; justify-content: center; align-items: center; }
         
@@ -113,7 +131,7 @@
         .card-scroller { width: 100%; overflow-x: auto; padding: 40px 0; display: flex; scroll-behavior: smooth; } .card-scroller::-webkit-scrollbar { display: none; }
         .card-track { display: flex; gap: 25px; padding: 0 50vw; width: max-content; }
 
-        /* MODALS (UPDATED TRANSITION) */
+        /* MODALS */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); opacity: 0; transition: opacity 0.3s ease; }
         .modal.open { display: flex; opacity: 1; }
         .modal-box { width: 90%; max-width: 450px; background: #1a1a1a; border: 2px solid #444; text-align: left; display: flex; flex-direction: column; max-height: 80vh; transform: translateY(50px) scale(0.9); transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
@@ -121,28 +139,22 @@
         .modal-body { overflow-y: auto; } .shop-grid, .inv-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; } .inv-grid { grid-template-columns: repeat(3, 1fr); }
         .shop-item { background: #222; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #333; cursor: pointer; transition: 0.2s; } .shop-item:hover { border-color: var(--gold); background: #2a2a2a; transform: scale(1.02); }
         
-        /* LITE INV CARD */
         .inv-card-simple { aspect-ratio: 1; background: #151515; border: 2px solid #333; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; cursor: pointer; transition: 0.1s; }
         .inv-card-simple:active { transform: scale(0.95); }
         .inv-mut-1 { border-color: #afffff; box-shadow: inset 0 0 10px rgba(175, 255, 255, 0.3); }
         .inv-mut-2 { border-color: #a855f7; box-shadow: inset 0 0 10px rgba(168, 85, 247, 0.3); }
         .inv-mut-3 { border-color: #ff0000; box-shadow: inset 0 0 10px rgba(255, 0, 0, 0.3); }
 
-        /* PREVIEW OVERLAY (Z-INDEX 7000) */
         #previewOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 7000; display: none; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.2s; opacity: 0; pointer-events: none; } 
         #previewOverlay.show { opacity: 1; pointer-events: auto; }
         #previewCont { transform: scale(1.0); } 
         #sellActions { margin-top: 60px; display: flex; gap: 10px; z-index: 601; pointer-events: auto; }
 
-        /* PARTICLES */
         .jackpot-particle { position: absolute; width: 8px; height: 8px; border-radius: 50%; top: 50%; left: 50%; pointer-events: none; opacity: 0; }
-        @keyframes particleExplode { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
 
-        /* CARD STYLES */
         .card { width: 220px; height: 320px; background: #151515; border: 3px solid #333; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; flex-shrink: 0; overflow: hidden; --glow: #555; transform: scale(0.8); opacity: 0.5; transition: 0.3s; }
         .card.active { transform: scale(1.1); opacity: 1; z-index: 10; border-color: var(--glow); box-shadow: 0 0 40px var(--glow), inset 0 0 20px var(--glow); }
 
-        /* GOD ENTRANCE */
         @keyframes godEntrance {
             0% { opacity: 0; transform: scale(0.3) rotate(-15deg); filter: brightness(0) blur(10px); }
             40% { opacity: 1; transform: scale(1.6) rotate(5deg); filter: brightness(4) blur(0px); } 
@@ -152,7 +164,6 @@
         }
         .jackpot-card { animation: godEntrance 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards !important; box-shadow: 0 0 100px var(--glow), inset 0 0 50px var(--glow) !important; }
         
-        /* FAST ANIM FOR PREVIEW (1.0s DURATION) */
         .fast-anim { animation-duration: 1.0s !important; }
 
         .t-joker { --glow: var(--joker); background: linear-gradient(135deg, #200020, #000); }
@@ -175,22 +186,40 @@
         @keyframes demonShake { 0%{transform:rotate(0)} 25%{transform:rotate(1deg)} 75%{transform:rotate(-1deg)} }
         @keyframes demonFloat { 0%{transform:translateY(0)} 100%{transform:translateY(-15px) scale(1.05)} }
         @keyframes pulseRed { 0%{box-shadow:0 0 80px #ff0000} 100%{box-shadow:0 0 150px #ff0000} }
-        @keyframes starsAnim { 100%{background-position: 0 1000px} }
         @keyframes pulse { 0%{transform:scale(1)} 50%{transform:scale(1.05)} }
         @keyframes shake { 0%{transform:translate(0)} 25%{transform:translate(-5px, 5px)} 75%{transform:translate(5px, -5px)} 100%{transform:translate(0)} }
         @keyframes zoomIn { from {transform:scale(0)} to {transform:scale(1)} }
-        @keyframes float { 0%, 100% {transform:scale(1.5) translateY(0)} 50% {transform:scale(1.5) translateY(-20px)} }
+        @keyframes particleExplode { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
         @keyframes boostPulse { 0% { box-shadow: 0 0 30px var(--glitch), inset 0 0 10px rgba(0, 255, 255, 0.2); } 100% { box-shadow: 0 0 60px var(--glitch), inset 0 0 30px rgba(0, 255, 255, 0.5); } }
         @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
     </style>
 </head>
 <body>
-
     <div class="nebula-bg"><div class="stars"></div></div>
     <canvas id="particleCanvas"></canvas>
     <canvas id="lightningCanvas"></canvas>
+    
     <div class="dim-overlay" id="dimOverlay"></div>
+
+    <audio id="bgm1" src="https://a.top4top.io/m_3664ewg8p0.mp3" preload="auto"></audio>
+    <audio id="bgm2" src="https://a.top4top.io/m_3664ewg8p0.mp3" preload="auto"></audio>
+    <audio id="demonAudio" src="https://a.top4top.io/m_3663cs2cw0.mp3"></audio>
+    <audio id="winAudio" src="https://l.top4top.io/m_3663vc4970.mp3"></audio>
+    <audio id="winAudio2" src="https://l.top4top.io/m_3663vc4970.mp3"></audio>
+    <audio id="thunderAudio" src="https://a.top4top.io/m_36636a1cl0.mp3"></audio>
+    <audio id="thunderAudio2" src="https://a.top4top.io/m_36636a1cl0.mp3"></audio>
+    
+    <div id="systemAlert">
+        <div class="alert-box">
+            <div class="alert-icon">💾</div>
+            <div class="alert-head">SYSTEM NOTIFICATION</div>
+            <div class="alert-msg" id="alertText">...</div>
+            <div class="alert-btn-group">
+                <button class="btn-alert" id="btnAlertOk" onclick="handleAlertOk()">SETUJU</button>
+                <button class="btn-alert-cancel" id="btnAlertCancel" onclick="handleAlertCancel()">BATAL</button>
+            </div>
+        </div>
+    </div>
 
     <div id="confirmModal">
         <div class="confirm-box">
@@ -203,35 +232,16 @@
         </div>
     </div>
 
-    <div id="sellModal" style="display:none; position:fixed; inset:0; z-index:8000; background:rgba(0,0,0,0.9); backdrop-filter:blur(5px); align-items:center; justify-content:center;">
-        <div class="sell-box" style="width:300px; background:linear-gradient(135deg, #200, #000); border:2px solid var(--demon); border-radius:15px; padding:25px; text-align:center; box-shadow:0 0 50px rgba(255,0,60,0.3); transform:scale(0.9); animation:popIn 0.2s forwards;">
-            <div class="sell-title" style="color:var(--demon); font-size:1.2rem; font-weight:900; margin-bottom:15px;">PERINGATAN!</div>
-            <div class="confirm-msg" id="sellMsg" style="color:#fff; margin-bottom:25px;">...</div>
-            <div class="confirm-actions" style="display:flex; gap:10px;">
-                <button class="btn-sell-yes" id="btnConfirmSell" style="flex:1; background:var(--demon); color:#fff; border:none; padding:12px; font-weight:800; border-radius:8px; cursor:pointer;">JUAL</button>
+    <div id="sellModal">
+        <div class="sell-box">
+            <div class="sell-title">PERINGATAN!</div>
+            <div class="confirm-msg" id="sellMsg">...</div>
+            <div class="confirm-actions">
+                <button class="btn-sell-yes" id="btnConfirmSell">JUAL</button>
                 <button class="btn-no" onclick="closeSellModal()">BATAL</button>
             </div>
         </div>
     </div>
-
-    <div id="systemAlert">
-        <div class="alert-box">
-            <div class="alert-icon">💾</div>
-            <div class="alert-head">SYSTEM NOTIFICATION</div>
-            <div class="alert-msg" id="alertText">...</div>
-            <button class="btn-alert" onclick="closeSystemAlert()">SETUJU</button>
-        </div>
-    </div>
-
-    <audio id="bgm1" src="https://f.top4top.io/m_36637n1e00.mp3" preload="auto"></audio>
-    <audio id="bgm2" src="https://f.top4top.io/m_36637n1e00.mp3" preload="auto"></audio>
-    
-    <audio id="demonAudio" src="https://a.top4top.io/m_3663cs2cw0.mp3"></audio>
-
-    <audio id="winAudio" src="https://l.top4top.io/m_3663vc4970.mp3"></audio>
-    <audio id="winAudio2" src="https://l.top4top.io/m_3663vc4970.mp3"></audio>
-    <audio id="thunderAudio" src="https://a.top4top.io/m_36636a1cl0.mp3"></audio>
-    <audio id="thunderAudio2" src="https://a.top4top.io/m_36636a1cl0.mp3"></audio>
 
     <div id="startScreen">
         <h1 style="font-size:3.5rem; margin-bottom:20px; color:var(--demon); text-shadow:0 0 30px #f00; text-transform:uppercase; text-align:center;">KAKEK SUSANOO<br><span style="font-size:1.5rem; color:#fff;">GACOR WAKK</span></h1>
@@ -316,10 +326,11 @@
 
     <div id="jackpotPopup" onclick="closeJackpot()"><div class="jackpot-text" id="jackpotTitle">GOD MODE!</div><div id="jackpotCont"></div><div style="margin-top:50px; color:#fff; font-size:1rem; opacity:0.8; animation:pulse 0.5s infinite;">TAP ANYWHERE TO CLAIM</div></div>
     <div class="result-layer" id="resultLayer"><div class="card-scroller" id="cardScroller"><div class="card-track" id="cardTrack"></div></div><button class="btn-act btn-multi" style="width:200px; margin-top:30px; font-size:1.2rem; box-shadow:0 0 20px var(--joker);" onclick="closeResult()">AMBIL ITEM</button></div>
-    
     <div id="previewOverlay" onclick="closePreview()"><div id="previewContent" onclick="event.stopPropagation()"><div id="previewCont"></div><div id="sellActions" style="margin-top:20px; display:flex; justify-content:center;"></div></div><div style="margin-top:30px; color:#888; font-size:0.8rem;">TAP BACKGROUND TO CLOSE</div></div>
-    
     <script>
+        // ===== BAGIAN 2: DATA & VISUAL ENGINE (DARK AURA MAX) =====
+        
+        // --- DATA ---
         const ITEMS = [
             { id: 1, name: "TONGKAT PATAH", tier: 0, baseVal: 5, emoji: "🪄", color: "#555", weight: 4000 },
             { id: 2, name: "ABU KUTUKAN", tier: 0, baseVal: 5, emoji: "🌫️", color: "#555", weight: 4000 },
@@ -335,203 +346,349 @@
         ];
 
         let state = { user: "", isGuest: false, cash: 0, coins: 1000, items: [] };
-        let temp = { spinning: false, boost: false, luck: false, muted: false, pendingTx: null };
+        let temp = { spinning: false, boost: false, luck: false, muted: false, pendingTx: null, alertCallback: null };
         let actx = null;
         let masterGain = null;
         let sellCallback = null;
 
-        // ===== VISUAL FX =====
         const pCanvas = document.getElementById('particleCanvas');
         const lCanvas = document.getElementById('lightningCanvas');
         const pCtx = pCanvas.getContext('2d');
         const lCtx = lCanvas.getContext('2d');
-        let particles = [];
+        
+        let particles = []; 
+        let sparks = []; 
+        let activeBolts = []; 
 
-        function resizeCanvas() {
-            pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight;
-            lCanvas.width = window.innerWidth; lCanvas.height = window.innerHeight;
-        }
+        function resizeCanvas() { pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight; lCanvas.width = window.innerWidth; lCanvas.height = window.innerHeight; }
         window.onresize = resizeCanvas;
 
+        // --- VISUAL CLASSES ---
         class Particle {
             constructor() { this.reset(); this.y = Math.random() * pCanvas.height; }
             reset() { this.x = Math.random() * pCanvas.width; this.y = pCanvas.height + 10; this.speed = Math.random() * 0.5 + 0.2; this.size = Math.random() * 2; this.opacity = Math.random() * 0.5; }
             update() { this.y -= this.speed; if(this.y < -10) this.reset(); }
             draw() { pCtx.fillStyle = `rgba(255,255,255,${this.opacity})`; pCtx.beginPath(); pCtx.arc(this.x, this.y, this.size, 0, Math.PI*2); pCtx.fill(); }
         }
-        function initParticles() { resizeCanvas(); for(let i=0; i<50; i++) particles.push(new Particle()); animateParticles(); }
-        function animateParticles() { pCtx.clearRect(0,0,pCanvas.width, pCanvas.height); particles.forEach(p=>{p.update(); p.draw();}); requestAnimationFrame(animateParticles); }
 
+        class RingSpark {
+            constructor(x, y, color) {
+                this.x = x; this.y = y; this.color = color;
+                this.life = 1.0;
+                this.radius = 10;
+                this.maxRadius = 130;
+                this.decay = 0.04;
+            }
+            update() { this.life -= this.decay; this.radius += (this.maxRadius - this.radius) * 0.2; }
+            draw() {
+                lCtx.save();
+                lCtx.beginPath();
+                lCtx.strokeStyle = this.color;
+                lCtx.lineWidth = 4 * this.life;
+                lCtx.shadowBlur = 15;
+                lCtx.shadowColor = this.color;
+                lCtx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+                lCtx.stroke();
+                lCtx.restore();
+            }
+        }
+
+        class Smoke {
+            constructor(x, y) {
+                this.x = x + (Math.random()-0.5)*30; this.y = y + (Math.random()-0.5)*30;
+                this.size = Math.random() * 10 + 10; this.life = 1.0; this.decay = 0.02;
+                this.vx = (Math.random()-0.5) * 1.5; this.vy = -1 - Math.random(); 
+            }
+            update() { this.x += this.vx; this.y += this.vy; this.life -= this.decay; this.size += 0.2; }
+            draw() {
+                lCtx.fillStyle = `rgba(100, 100, 100, ${this.life * 0.4})`;
+                lCtx.beginPath(); lCtx.arc(this.x, this.y, this.size, 0, Math.PI*2); lCtx.fill();
+            }
+        }
+
+        class ElectricShard {
+            constructor(x, y, color) {
+                this.x = x; this.y = y; this.color = color;
+                const angle = Math.random() * Math.PI * 2; const speed = Math.random() * 15 + 5;
+                this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
+                this.life = 1.0; this.decay = 0.07; this.length = Math.random() * 30 + 10; this.angle = angle;
+            }
+            update() { this.x += this.vx; this.y += this.vy; this.vx *= 0.85; this.vy *= 0.85; this.life -= this.decay; }
+            draw() {
+                lCtx.save(); lCtx.strokeStyle = this.color; lCtx.lineWidth = 2; lCtx.shadowBlur = 10; lCtx.shadowColor = this.color; lCtx.globalAlpha = this.life;
+                lCtx.beginPath(); lCtx.moveTo(this.x, this.y); lCtx.lineTo(this.x - Math.cos(this.angle)*this.length, this.y - Math.sin(this.angle)*this.length); lCtx.stroke(); lCtx.restore();
+            }
+        }
+
+        class LightningBolt {
+            constructor(startX, startY, targetX, targetY, color, intensity) {
+                this.sx = startX; this.sy = startY; this.tx = targetX; this.ty = targetY;
+                this.color = color; this.intensity = intensity; this.life = 1.0; this.decay = 0.08; this.strands = [];
+                for(let i=0; i<7; i++) {
+                    this.strands.push({ offsetX: (Math.random() - 0.5) * 12, offsetY: (Math.random() - 0.5) * 12, width: (i===0) ? 3 : 1.5, isCore: (i===0) });
+                }
+            }
+            update() { this.life -= this.decay; }
+            draw(ctx) {
+                if(this.life <= 0) return;
+                ctx.fillStyle = this.color; ctx.globalAlpha = this.life * 0.5; ctx.shadowBlur = 40; ctx.shadowColor = this.color;
+                ctx.beginPath(); ctx.arc(this.tx, this.ty, this.intensity * 4 * this.life, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1.0;
+                this.strands.forEach(strand => {
+                    ctx.beginPath(); ctx.moveTo(this.sx + strand.offsetX, this.sy + strand.offsetY);
+                    if(strand.isCore) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = strand.width; ctx.shadowBlur = 25; ctx.shadowColor = this.color; } 
+                    else { ctx.strokeStyle = this.color; ctx.lineWidth = strand.width; ctx.shadowBlur = 10; ctx.shadowColor = this.color; }
+                    drawJaggedLine(ctx, this.sx + strand.offsetX, this.sy + strand.offsetY, this.tx, this.ty, 200); ctx.stroke();
+                });
+            }
+        }
+
+        function drawJaggedLine(ctx, x1, y1, x2, y2, displacement) {
+            if (displacement < 5) { ctx.lineTo(x2, y2); return; }
+            const midX = (x1 + x2) / 2; const midY = (y1 + y2) / 2;
+            const offsetX = (Math.random() - 0.5) * displacement; const offsetY = (Math.random() - 0.5) * displacement;
+            drawJaggedLine(ctx, x1, y1, midX + offsetX, midY + offsetY, displacement / 1.8);
+            drawJaggedLine(ctx, midX + offsetX, midY + offsetY, x2, y2, displacement / 1.8);
+        }
+
+        function initParticles() { resizeCanvas(); for(let i=0; i<50; i++) particles.push(new Particle()); animateVisuals(); }
+        
+        function animateVisuals() { 
+            pCtx.clearRect(0,0,pCanvas.width, pCanvas.height); lCtx.clearRect(0,0,lCanvas.width, lCanvas.height); 
+            particles.forEach(p=>{p.update(); p.draw();}); 
+            sparks = sparks.filter(s => s.life > 0); sparks.forEach(s => { s.update(); s.draw(); });
+            activeBolts = activeBolts.filter(b => b.life > 0); activeBolts.forEach(b => { b.update(); b.draw(lCtx); });
+            requestAnimationFrame(animateVisuals); 
+        }
+
+        // --- TRIGGER FUNCTION: TUNNEL DARK AURA FIX ---
         function triggerTargetedLightning(reelIndex, color, intensity, type, tier, is4Way) {
             playSound('thunder');
-            const dim = document.getElementById('dimOverlay');
-            dim.style.backgroundColor = color;
-            dim.classList.add('active'); 
             
-            const isHeavies = (tier >= 4) || (type !== 'normal' && tier >= 3);
-            
-            if (isHeavies) {
-                setTimeout(() => { dim.classList.remove('active'); lCtx.clearRect(0,0,lCanvas.width,lCanvas.height); }, 1800);
-            } else {
-                setTimeout(() => { dim.classList.remove('active'); }, 100);
-            }
+            // 1. AURA MESIN (TETAP ADA)
+            const machine = document.getElementById('machineBody');
+            machine.style.setProperty('--aura-color', color); 
+            machine.classList.add('aura-active'); 
+            setTimeout(() => { machine.classList.remove('aura-active'); }, 2000);
 
-            let flash = 1.0;
+            // 2. DIM OVERLAY (TUNNEL EFFECT - FIX)
+            const dim = document.getElementById('dimOverlay');
             const reel = document.getElementById(`reel${reelIndex}`);
             const rect = reel.getBoundingClientRect();
+            
+            // Mencari titik tengah reel yang menang
             const targetX = rect.left + (rect.width / 2);
             const targetY = rect.top + (rect.height / 2);
+
+            // LOGIKA GRADIENT: Transparan di tengah (15%), lalu Hitam Pekat di sisa layar.
+            // Tidak ada warna di overlay ini, hanya hitam dan transparan. Warna datang dari efek Petir.
+            dim.style.background = `radial-gradient(circle at ${targetX}px ${targetY}px, transparent 15%, rgba(0,0,0,0.95) 30%, #000 100%)`;
             
-            let sources = [{x: window.innerWidth / 2, y: 0}];
-            if (is4Way) {
-                sources = [{x: 0, y: 0}, {x: window.innerWidth, y: 0}, {x: 0, y: window.innerHeight}, {x: window.innerWidth, y: window.innerHeight}];
-            }
+            dim.classList.add('active'); 
+            
+            // Efek berkedip cepat lalu hilang
+            setTimeout(() => { dim.classList.remove('active'); }, 250); 
 
-            function drawBolt(x1, y1, x2, y2, isCore) {
-                let thicknessMult = type === 'demon' ? 2.5 : 1.0;
-                let glowMult = type === 'demon' ? 1.5 : 1.0;
-                lCtx.shadowBlur = (isCore ? 20 : intensity * 10) * glowMult;
-                lCtx.shadowColor = isCore ? "#ffffff" : color;
-                lCtx.lineWidth = (isCore ? Math.max(3, intensity / 1.5) : intensity) * thicknessMult;
-                lCtx.strokeStyle = isCore ? "#ffffff" : color;
-                lCtx.lineCap = 'round';
-                lCtx.beginPath(); lCtx.moveTo(x1, y1);
-                let cx = x1, cy = y1;
-                const dist = Math.sqrt(Math.pow(x2-x1,2) + Math.pow(y2-y1,2));
-                const steps = dist / (type === 'glitch' ? 8 : 15); 
-                const dx = (x2-x1)/steps; const dy = (y2-y1)/steps;
-                let noise = (type === 'glitch') ? 60 : (type === 'demon' ? 120 : 30); 
-                let branchChance = (type === 'glitch' || type === 'demon') ? 0.4 : 0.7;
-                for(let i=0; i<steps; i++) {
-                    cx += dx + (Math.random()*noise - (noise/2));
-                    cy += dy + (Math.random()*noise - (noise/2));
-                    lCtx.lineTo(cx, cy);
-                    if(!isCore && Math.random() > branchChance) { lCtx.lineTo(cx + (Math.random()*150-75), cy + (Math.random()*150-75)); lCtx.moveTo(cx, cy); }
-                }
-                lCtx.lineTo(x2, y2); lCtx.stroke();
-            }
+            // 3. SPAWN VISUALS (Petir muncul DI ATAS kegelapan)
+            sparks.push(new RingSpark(targetX, targetY, color));
+            for(let i=0; i<12; i++) sparks.push(new ElectricShard(targetX, targetY, color));
+            for(let i=0; i<8; i++) sparks.push(new Smoke(targetX, targetY));
 
-            function anim() {
-                lCtx.clearRect(0,0,lCanvas.width,lCanvas.height);
-                if(flash <= 0) { if(!isHeavies) document.getElementById('dimOverlay').classList.remove('active'); return; }
-                sources.forEach(src => { drawBolt(src.x, src.y, targetX, targetY, false); drawBolt(src.x, src.y, targetX, targetY, true); });
-                lCtx.fillStyle = "#ffffff"; lCtx.shadowColor = color; lCtx.shadowBlur = is4Way ? 100 : 60; 
-                lCtx.globalAlpha = flash * 0.8;
-                lCtx.beginPath(); lCtx.arc(targetX, targetY, intensity * (is4Way ? 15 : 10), 0, Math.PI*2); lCtx.fill();
-                lCtx.globalAlpha = 1;
-                flash -= 0.05;
-                requestAnimationFrame(anim);
-            }
-            anim();
+            let sources = is4Way ? 
+                [{x:0,y:0}, {x:window.innerWidth,y:0}, {x:0,y:window.innerHeight}, {x:window.innerWidth,y:window.innerHeight}] : 
+                [{x:window.innerWidth/2, y:-100}];
+            
+            sources.forEach(src => {
+                activeBolts.push(new LightningBolt(src.x, src.y, targetX, targetY, color, intensity));
+            });
         }
 
-        // ===== AUDIO ENGINE =====
+        // --- AUDIO ENGINE (VOLUME FIX) ---
         let winTimeout = null; 
-        const BASE_BGM_VOL = 0.8; const SFX_GAIN = 0.9; 
-        function playChord(freqs, type, dur) { if(!actx) return; const t = actx.currentTime; freqs.forEach(f => { const o = actx.createOscillator(); const g = actx.createGain(); o.type = type; o.frequency.value = f; g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.01, t + dur); o.connect(g); g.connect(masterGain); o.start(); o.stop(t + dur); }); }
+        const BASE_BGM_VOL = 0.6; 
+
+        function playChord(freqs, type, dur) { 
+            if(!actx) return; const t = actx.currentTime; 
+            freqs.forEach(f => { 
+                const o = actx.createOscillator(); const g = actx.createGain(); 
+                o.type = type; o.frequency.value = f; 
+                g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.01, t + dur); 
+                o.connect(g); g.connect(masterGain); o.start(); o.stop(t + dur); 
+            }); 
+        }
+
         function playSound(type, param) {
-            if(temp.muted) return; if(actx && actx.state==='suspended') actx.resume();
-            if (type === 'win') { const el = document.getElementById('winAudio'); const el2 = document.getElementById('winAudio2'); if (winTimeout) clearTimeout(winTimeout); el.currentTime = 0; el2.currentTime = 0; el.volume = 1.0; el2.volume = 1.0; el.play().catch(e=>{}); el2.play().catch(e=>{}); const tier = param.tier; const mut = param.mut; const isHighEnd = (tier >= 4 || (mut >= 1 && tier >= 3)); if (!isHighEnd) { winTimeout = setTimeout(() => { let vol = 1.0; let fade = setInterval(() => { vol -= 0.1; if (vol <= 0) { clearInterval(fade); el.pause(); el2.pause(); } else { el.volume = vol; el2.volume = vol; } }, 50); }, 2500); } return; }
-            if (type === 'thunder') { const el = document.getElementById('thunderAudio'); const el2 = document.getElementById('thunderAudio2'); el.currentTime = 0; el2.currentTime = 0; el.play().catch(e=>{}); el2.play().catch(e=>{}); return; }
-            if (type === 'reelStop') { const o = actx.createOscillator(); const g = actx.createGain(); o.connect(g); g.connect(masterGain); o.type = 'triangle'; o.frequency.setValueAtTime(200, actx.currentTime); o.frequency.exponentialRampToValueAtTime(50, actx.currentTime + 0.15); g.gain.setValueAtTime(1.0, actx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 0.15); o.start(); o.stop(actx.currentTime + 0.15); return; }
+            if(temp.muted) return; 
+            if(actx && actx.state==='suspended') actx.resume();
+
+            // --- MP3 SOUNDS ---
+            if (type === 'win') { 
+                const el = document.getElementById('winAudio'); const el2 = document.getElementById('winAudio2'); 
+                if (winTimeout) clearTimeout(winTimeout); 
+                el.currentTime = 0; el2.currentTime = 0; 
+                el.volume = 0.9; el2.volume = 0.9; // Normal Volume (No Distort)
+                el.play().catch(e=>{}); el2.play().catch(e=>{}); 
+                
+                const tier = param.tier; const mut = param.mut; 
+                const isHighEnd = (tier >= 4 || (mut >= 1 && tier >= 3)); 
+                if (!isHighEnd) { 
+                    winTimeout = setTimeout(() => { 
+                        let vol = 0.9; let fade = setInterval(() => { vol -= 0.1; if (vol <= 0) { clearInterval(fade); el.pause(); el2.pause(); } else { el.volume = vol; el2.volume = vol; } }, 50); 
+                    }, 2500); 
+                } return; 
+            }
+            if (type === 'thunder') { 
+                const el = document.getElementById('thunderAudio'); const el2 = document.getElementById('thunderAudio2'); 
+                el.currentTime = 0; el2.currentTime = 0; el.volume = 1.0; 
+                el.play().catch(e=>{}); el2.play().catch(e=>{}); return; 
+            }
+            if (type === 'mut' && param === 3) {
+                const el = document.getElementById('demonAudio'); el.currentTime = 0; el.volume = 1.0; el.play().catch(e=>{}); return; 
+            }
+
+            // --- OSCILLATOR SOUNDS ---
             if(!actx) return; const t = actx.currentTime;
-            if (type === 'spin') { const o = actx.createOscillator(); const g = actx.createGain(); o.connect(g); g.connect(masterGain); o.type = 'sine'; o.frequency.setValueAtTime(200, t); o.frequency.linearRampToValueAtTime(600, t+0.1); g.gain.setValueAtTime(SFX_GAIN, t); g.gain.exponentialRampToValueAtTime(0.01, t+0.1); o.start(); o.stop(t+0.1); }
-            else if (type === 'boost') { const o = actx.createOscillator(); const g = actx.createGain(); o.connect(g); g.connect(masterGain); o.type = 'sawtooth'; o.frequency.setValueAtTime(220, t); o.frequency.linearRampToValueAtTime(880, t+0.1); g.gain.setValueAtTime(0.5, t); g.gain.linearRampToValueAtTime(0, t+0.1); o.start(); o.stop(t+0.1); }
+
+            if (type === 'residue') {
+                const o = actx.createOscillator(); const g = actx.createGain();
+                o.type = 'sawtooth'; o.frequency.setValueAtTime(100, t); o.frequency.linearRampToValueAtTime(50, t+0.5);
+                g.gain.setValueAtTime(0.2, t); g.gain.exponentialRampToValueAtTime(0.01, t+0.5);
+                o.connect(g); g.connect(masterGain); o.start(); o.stop(t+0.5); return;
+            }
+
+            if (type === 'reelStop') { 
+                const o = actx.createOscillator(); const g = actx.createGain(); 
+                o.connect(g); g.connect(masterGain); o.type = 'triangle'; 
+                o.frequency.setValueAtTime(200, actx.currentTime); o.frequency.exponentialRampToValueAtTime(50, actx.currentTime + 0.15); 
+                g.gain.setValueAtTime(0.8, actx.currentTime); // Standard
+                g.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 0.15); 
+                o.start(); o.stop(actx.currentTime + 0.15); return; 
+            }
+            
+            // SPIN: DIKEMBALIKAN KE VOLUME NORMAL (LOW)
+            if (type === 'spin') { 
+                const o = actx.createOscillator(); const g = actx.createGain(); 
+                o.connect(g); g.connect(masterGain); o.type = 'sine'; 
+                o.frequency.setValueAtTime(200, t); o.frequency.linearRampToValueAtTime(600, t+0.1); 
+                g.gain.setValueAtTime(0.4, t); // REVERTED TO LOW
+                g.gain.exponentialRampToValueAtTime(0.01, t+0.1); 
+                o.start(); o.stop(t+0.1); 
+            }
+            // BOOST
+            else if (type === 'boost') { 
+                const o = actx.createOscillator(); const g = actx.createGain(); 
+                o.connect(g); g.connect(masterGain); o.type = 'sawtooth'; 
+                o.frequency.setValueAtTime(220, t); o.frequency.linearRampToValueAtTime(880, t+0.1); 
+                g.gain.setValueAtTime(0.4, t); g.gain.linearRampToValueAtTime(0, t+0.1); 
+                o.start(); o.stop(t+0.1); 
+            }
+            // MUTATION FX: BOOSTED MODERATELY
             else if (type === 'mut') { 
-                if (param === 3) { // DEMON SOUND - NO CUT
-                    const el = document.getElementById('demonAudio');
-                    el.currentTime = 0; 
-                    el.volume = 1.0; 
-                    el.play().catch(e=>{});
-                    return; 
-                }
-                const o = actx.createOscillator(); 
-                const g = actx.createGain(); 
-                o.connect(g); 
-                g.connect(masterGain); 
+                const o = actx.createOscillator(); const g = actx.createGain(); 
+                o.connect(g); g.connect(masterGain); 
                 if (param === 2) { 
-                    o.type = 'square'; 
-                    o.frequency.setValueAtTime(300, t); 
-                    g.gain.setValueAtTime(0.2, t); 
+                    o.type = 'square'; o.frequency.setValueAtTime(300, t); 
+                    g.gain.setValueAtTime(0.6, t); // Boosted Dikit
                     g.gain.exponentialRampToValueAtTime(0.01, t+2.0); 
-                    o.frequency.linearRampToValueAtTime(100, t+0.1); 
-                    o.frequency.linearRampToValueAtTime(100, t+0.2); 
-                    o.start(); 
-                    o.stop(t+3.0); 
+                    o.frequency.linearRampToValueAtTime(100, t+0.1); o.frequency.linearRampToValueAtTime(100, t+0.2); 
+                    o.start(); o.stop(t+3.0); 
                 } else if (param === 1) { 
-                    o.type = 'sine'; 
-                    o.frequency.setValueAtTime(400, t); 
-                    g.gain.setValueAtTime(0.4, t); 
+                    o.type = 'sine'; o.frequency.setValueAtTime(400, t); 
+                    g.gain.setValueAtTime(0.7, t); // Boosted Dikit
                     g.gain.exponentialRampToValueAtTime(0.01, t+2.0); 
-                    o.start(); 
-                    o.stop(t+3.0); 
+                    o.start(); o.stop(t+3.0); 
                 } 
             } 
-            else if (type === 'tier') { if (param <= 1) playChord([261.6], 'sine', 0.2); else if (param === 2) playChord([261.6, 329.6], 'sine', 0.4); else if (param === 3) playChord([261.6, 329.6, 392.0], 'triangle', 0.6); else if (param >= 4) { let notes = [261.6, 329.6, 392.0, 523.2]; notes.forEach((freq, i) => { setTimeout(() => playChord([freq], 'triangle', 0.5), i * 150); }); } }
+            // TIER SOUNDS
+            else if (type === 'tier') { 
+                if (param <= 1) playChord([261.6], 'sine', 0.2); 
+                else if (param === 2) playChord([261.6, 329.6], 'sine', 0.4); 
+                else if (param === 3) playChord([261.6, 329.6, 392.0], 'triangle', 0.6); 
+                else if (param >= 4) { let notes = [261.6, 329.6, 392.0, 523.2]; notes.forEach((freq, i) => { setTimeout(() => playChord([freq], 'triangle', 0.5), i * 150); }); } 
+            }
         }
-
-        let currentBGM = 1; const bgm1 = document.getElementById('bgm1'); const bgm2 = document.getElementById('bgm2'); 
-        const SWAP_TIME = 96.0; // TRIGGER SWAP AT 1:36 (2 SEC BEFORE END)
-        let isSwapping = false;
+        // --- BGM: PING PONG SYSTEM ---
+        let currentBGM = 1; 
+        const bgm1 = document.getElementById('bgm1'); const bgm2 = document.getElementById('bgm2'); 
+        const SWAP_TIME = 96.0; let isSwapping = false;
 
         function startPingPong() { 
-            bgm1.volume = BASE_BGM_VOL; 
-            bgm2.volume = BASE_BGM_VOL; 
-            bgm2.muted = true; 
+            bgm1.volume = BASE_BGM_VOL; bgm2.volume = BASE_BGM_VOL; bgm2.muted = true; 
             bgm2.play().then(() => { bgm2.pause(); bgm2.muted=false; bgm2.currentTime=0; }); 
-            
-            // START TRACK 1 FROM 0.3s (V39)
-            bgm1.currentTime = 0.3; 
-            bgm1.play().catch(e => console.log("BGM Start blocked")); 
+            bgm1.currentTime = 0.3; bgm1.play().catch(e => console.log("BGM Start blocked")); 
             setInterval(monitorPingPong, 50); 
         }
 
         function monitorPingPong() { 
-            let active = currentBGM === 1 ? bgm1 : bgm2; 
-            let next = currentBGM === 1 ? bgm2 : bgm1; 
-            
-            // TRIGGER SWAP LOGIC (V39 - OVERLAP STRATEGY)
+            let active = currentBGM === 1 ? bgm1 : bgm2; let next = currentBGM === 1 ? bgm2 : bgm1; 
             if (!isSwapping && active.currentTime >= SWAP_TIME) {
                 isSwapping = true;
-                
-                next.currentTime = 0.3; // START NEXT FROM 0.3s
-                next.volume = BASE_BGM_VOL;
-                
-                // PLAY NEXT FIRST (OVERLAP)
+                next.currentTime = 0.3; next.volume = BASE_BGM_VOL;
                 next.play().then(() => {
-                    // WAIT 1 SEC BEFORE STOPPING OLD (SMOOTH OVERLAP)
-                    setTimeout(() => { 
-                        active.pause(); 
-                        active.currentTime = 0; 
-                        currentBGM = currentBGM === 1 ? 2 : 1; 
-                        isSwapping = false;
-                    }, 1000); 
-                }).catch(e => {
-                    console.log("Swap Error", e);
-                    isSwapping = false;
-                });
+                    setTimeout(() => { active.pause(); active.currentTime = 0; currentBGM = currentBGM === 1 ? 2 : 1; isSwapping = false; }, 1000); 
+                }).catch(e => { isSwapping = false; });
             }
-            
-            // FAILSAFE RESTART IF STOPPED UNEXPECTEDLY
-            if (active.paused && !isSwapping && active.currentTime > 0 && active.currentTime < SWAP_TIME) { 
-                active.play().catch(()=>{}); 
-            } 
+            if (active.paused && !isSwapping && active.currentTime > 0 && active.currentTime < SWAP_TIME) { active.play().catch(()=>{}); } 
         }
 
-        function startGame() { document.getElementById('startScreen').style.display = 'none'; document.getElementById('loginScreen').style.display = 'flex'; actx = new (window.AudioContext || window.webkitAudioContext)(); masterGain = actx.createGain(); masterGain.gain.value = 1.0; masterGain.connect(actx.destination); actx.resume(); initParticles(); startPingPong(); }
+        function ensureBGM() { let active = currentBGM === 1 ? bgm1 : bgm2; if(active.paused) active.play().catch(()=>{}); }
 
-        // ===== GAME LOGIC =====
+        // --- GAME CONTROL ---
+        function startGame() { 
+            document.getElementById('startScreen').style.display = 'none'; document.getElementById('loginScreen').style.display = 'flex'; 
+            actx = new (window.AudioContext || window.webkitAudioContext)(); 
+            masterGain = actx.createGain(); masterGain.gain.value = 1.0; masterGain.connect(actx.destination); actx.resume(); 
+            initParticles(); startPingPong(); 
+        }
+
+        function doLogin() { 
+            const u = document.getElementById('username').value.trim(); 
+            if(!u) { showSystemAlert("ACCESS DENIED: USERNAME REQUIRED"); return; } 
+            state.user = u; state.isGuest = false; 
+            let foundSave = false;
+            const s = localStorage.getItem('casino_legend_v_final_' + u); 
+            if(s) { try { const p = JSON.parse(s); state.cash=p.cash||0; state.coins=p.coins||1000; state.items=p.items||[]; foundSave = true; } catch(e){} } 
+            showSystemAlert(foundSave ? `WELCOME BACK, AGENT ${u}<br>DATA LOADED` : `NEW PROFILE CREATED: ${u}`, true, () => { state.user = ""; document.getElementById('loginScreen').style.display = 'flex'; });
+            document.getElementById('loginScreen').style.display='none'; initSlots(); updateUI(); renderShop(); 
+        }
+
+        function doGuest() { 
+            const guestName = "GUEST_" + Math.floor(Math.random() * 9999); 
+            state.user = guestName; state.isGuest = true; 
+            document.getElementById('loginScreen').style.display='none'; initSlots(); updateUI(); renderShop(); 
+            showSystemAlert("GUEST MODE ACTIVATED<br>DATA NOT SAVED", true, () => { state.user = ""; state.isGuest = false; document.getElementById('loginScreen').style.display = 'flex'; }); 
+        }
+
+        // --- RNG LOGIC ---
         function getPrice(item, mut) { if(item.id === 11) { if(mut === 3) return 5000000; if(mut === 2) return 2000000; if(mut === 1) return 1000000; return item.baseVal; } if(item.id === 10) { if(mut === 3) return 1500000; if(mut === 2) return 500000; if(mut === 1) return 150000; return item.baseVal; } let bonus = 0; if(mut===3)bonus=30; if(mut===2)bonus=20; if(mut===1)bonus=10; return item.baseVal + bonus; }
-        function doLogin() { const u = document.getElementById('username').value.trim(); if(!u) { showSystemAlert("ACCESS DENIED: USERNAME REQUIRED"); return; } state.user = u; state.isGuest = false; const s = localStorage.getItem('casino_legend_v_final_' + u); if(s) { try { const p = JSON.parse(s); state.cash=p.cash||0; state.coins=p.coins||1000; state.items=p.items||[]; showSystemAlert(`WELCOME BACK, AGENT ${u}<br>DATA LOGIN`); } catch(e){} } else { showSystemAlert(`NEW PROFILE CREATED: ${u}`); } document.getElementById('loginScreen').style.display='none'; initSlots(); updateUI(); renderShop(); }
-        function doGuest() { const guestName = "GUEST_" + Math.floor(Math.random() * 9999); state.user = guestName; state.isGuest = true; document.getElementById('loginScreen').style.display='none'; initSlots(); updateUI(); renderShop(); showSystemAlert("GUEST MODE ACTIVATED<br>DATA NOT SAVED"); }
-        function handleProfileClick() { if(state.isGuest) { if(confirm("LOGIN TO ACCESS FULL FEATURES?\n(Current guest data will be lost)")) { document.getElementById('loginScreen').style.display='flex'; } } }
-        function showSystemAlert(msg) { document.getElementById('alertText').innerHTML = msg; document.getElementById('systemAlert').style.display = 'flex'; playSound('tier', 1); }
-        function closeSystemAlert() { document.getElementById('systemAlert').style.display = 'none'; }
-        function save() { if(!state.isGuest && state.user) localStorage.setItem('casino_legend_v_final_' + state.user, JSON.stringify(state)); }
-        const STRIP_LEN = 30; function initSlots() { [1,2,3].forEach(id=>{ document.getElementById(`strip${id}`).innerHTML = generateStripHtml(); }); }
-        function generateStripHtml(targetItem=null) { let h = ''; for(let i=0; i<STRIP_LEN; i++) { if(targetItem && i === STRIP_LEN - 4) { h += `<div class="slot-icon" data-id="${targetItem.id}">${targetItem.emoji}</div>`; } else { const r = ITEMS[Math.floor(Math.random()*ITEMS.length)]; h += `<div class="slot-icon" style="opacity:0.4; filter:grayscale(1);">${r.emoji}</div>`; } } return h; }
-        function resetVisuals() { document.getElementById('dimOverlay').classList.remove('active'); lCtx.clearRect(0,0,lCanvas.width,lCanvas.height); document.getElementById('machineBody').classList.remove('god-active'); }
-        function updateUI() { document.getElementById('uiCash').innerText=state.cash.toLocaleString(); document.getElementById('uiCoins').innerText=state.coins.toLocaleString(); const pPill = document.getElementById('profilePill'); if(state.isGuest) { pPill.innerHTML = `👤 GUEST (LOGIN)`; pPill.className = 'profile-pill guest'; } else { pPill.innerHTML = `👤 ${state.user}`; pPill.className = 'profile-pill user'; } }
+
+        function roll() { 
+            let pool = JSON.parse(JSON.stringify(ITEMS)); 
+            if(temp.luck) { pool = pool.filter(i => i.tier >= 4); pool.forEach(i => i.weight = 100); } 
+            else if(temp.boost) pool.forEach(i=>{if(i.tier>=2)i.weight*=5}); 
+            let tot=pool.reduce((a,b)=>a+b.weight,0); let r=Math.random()*tot; let it=pool[0]; 
+            for(let p of pool) { if(r<p.weight){it=p;break;} r-=p.weight; } 
+            let mut=0; let rm=Math.random(); 
+            if(temp.luck) { if(rm < 0.4) mut=3; else if(rm < 0.7) mut=2; else mut=1; } 
+            else if(it.tier>=1) { if(rm<0.02) mut=3; else if(rm<0.08) mut=2; else if(rm<0.2) mut=1; } 
+            return {...it, mut, val: getPrice(it, mut), uid:Date.now()+Math.random()}; 
+        }
+
+        // --- SPIN ANIMATION SYSTEM ---
+        const STRIP_LEN = 30; 
+        function initSlots() { [1,2,3].forEach(id=>{ document.getElementById(`strip${id}`).innerHTML = generateStripHtml(); }); }
+        
+        function generateStripHtml(targetItem=null) { 
+            let h = ''; 
+            for(let i=0; i<STRIP_LEN; i++) { 
+                if(targetItem && i === STRIP_LEN - 4) { h += `<div class="slot-icon" data-id="${targetItem.id}">${targetItem.emoji}</div>`; } 
+                else { const r = ITEMS[Math.floor(Math.random()*ITEMS.length)]; h += `<div class="slot-icon" style="opacity:0.4; filter:grayscale(1);">${r.emoji}</div>`; } 
+            } return h; 
+        }
+        
+        function resetVisuals() { 
+            document.getElementById('dimOverlay').classList.remove('active'); 
+            document.getElementById('machineBody').classList.remove('god-active'); 
+        }
 
         async function spinSequence(count) {
             if(temp.spinning) return; resetVisuals(); 
@@ -543,11 +700,7 @@
             for(let i=0; i<count; i++) {
                 if(i > 0) { resetVisuals(); await new Promise(r=>setTimeout(r, 200)); } 
                 const item = roll(); sessionResults.push(item);
-                
-                // === FINAL LOGIC FIX: HANYA TIER >= 3 YANG DAPAT POPUP JIKA MUTASI ===
-                // === ATAU TIER >= 4 JIKA POLOS ===
                 const isGod = (item.tier >= 4) || (item.mut >= 1 && item.tier >= 3);
-                
                 await runSlotAnimation(item, isGod);
                 if(isGod) { await showJackpotPopup(item); } else { await new Promise(r=>setTimeout(r, 200)); }
             }
@@ -555,39 +708,42 @@
             temp.spinning = false; document.getElementById('spin1').disabled = false; document.getElementById('spin5').disabled = false; save();
         }
 
-        function roll() { let pool = JSON.parse(JSON.stringify(ITEMS)); if(temp.luck) { pool = pool.filter(i => i.tier >= 4); pool.forEach(i => i.weight = 100); } else if(temp.boost) pool.forEach(i=>{if(i.tier>=2)i.weight*=5}); let tot=pool.reduce((a,b)=>a+b.weight,0); let r=Math.random()*tot; let it=pool[0]; for(let p of pool) { if(r<p.weight){it=p;break;} r-=p.weight; } let mut=0; let rm=Math.random(); if(temp.luck) { if(rm < 0.4) mut=3; else if(rm < 0.7) mut=2; else mut=1; } else if(it.tier>=1) { if(rm<0.02) mut=3; else if(rm<0.08) mut=2; else if(rm<0.2) mut=1; } return {...it, mut, val: getPrice(it, mut), uid:Date.now()+Math.random()}; }
-
         function runSlotAnimation(targetItem, isGod) {
             return new Promise(resolve => {
                 const isAlign = isGod || (targetItem.tier >= 2) || (targetItem.mut > 0);
-                [1,2,3].forEach(id=>{ let visualTarget = targetItem; if (!isAlign && id > 1) visualTarget = ITEMS[Math.floor(Math.random() * ITEMS.length)]; const s = document.getElementById(`strip${id}`); s.innerHTML = generateStripHtml(visualTarget); s.style.transition = 'none'; s.style.transform = `translateY(0px)`; });
+                [1,2,3].forEach(id=>{ 
+                    let visualTarget = targetItem; 
+                    if (!isAlign && id > 1) visualTarget = ITEMS[Math.floor(Math.random() * ITEMS.length)]; 
+                    const s = document.getElementById(`strip${id}`); 
+                    s.innerHTML = generateStripHtml(visualTarget); 
+                    s.style.transition = 'none'; s.style.transform = `translateY(0px)`; 
+                });
                 void document.body.offsetWidth;
-                const STOP_Y = -1 * ((STRIP_LEN - 5) * 140); 
-                let finished = 0;
+                const STOP_Y = -1 * ((STRIP_LEN - 5) * 140); let finished = 0;
                 [1,2,3].forEach((id, idx) => {
                     const dur = 1.5 + (idx*0.5);
                     setTimeout(() => {
-                        const s = document.getElementById(`strip${id}`); s.querySelectorAll('.slot-icon').forEach(e=>e.classList.add('blur-spin')); s.style.transition = `transform ${dur}s cubic-bezier(0.1, 0.9, 0.2, 1)`; s.style.transform = `translateY(${STOP_Y}px)`; const tick = setInterval(()=>playSound('spin'), 100);
+                        const s = document.getElementById(`strip${id}`); 
+                        s.querySelectorAll('.slot-icon').forEach(e=>e.classList.add('blur-spin')); 
+                        s.style.transition = `transform ${dur}s cubic-bezier(0.1, 0.9, 0.2, 1)`; 
+                        s.style.transform = `translateY(${STOP_Y}px)`; 
+                        const tick = setInterval(()=>playSound('spin'), 100);
                         s.addEventListener('transitionend', () => {
-                            clearInterval(tick); s.querySelectorAll('.slot-icon').forEach(e=>e.classList.remove('blur-spin')); s.style.transition = "transform 0.2s"; s.style.transform = `translateY(${STOP_Y + 15}px)`; setTimeout(()=>{ s.style.transform = `translateY(${STOP_Y}px)`; }, 100);
-                            let currentItem = (isAlign || id===1) ? targetItem : {tier:0}; playSound('reelStop', currentItem);
+                            clearInterval(tick); 
+                            s.querySelectorAll('.slot-icon').forEach(e=>e.classList.remove('blur-spin')); 
+                            s.style.transition = "transform 0.2s"; s.style.transform = `translateY(${STOP_Y + 15}px)`; 
+                            setTimeout(()=>{ s.style.transform = `translateY(${STOP_Y}px)`; }, 100);
+                            let currentItem = (isAlign || id===1) ? targetItem : {tier:0}; playSound('reelStop', currentItem); 
                             if(isAlign) {
-                                let boltColor = '#ffffff'; let intensity = 2; let type = 'normal'; let is4Way = false;
-                                
-                                // LOGIC V31: SAME AS POPUP LOGIC
+                                let boltColor = '#ffffff'; let intensity = 2; let type = 'normal'; let is4Way = false; 
                                 if(targetItem.mut === 3) { boltColor = '#ff0000'; intensity = 18; type = 'demon'; } 
                                 else if(targetItem.mut === 2) { boltColor = '#a855f7'; intensity = 8; type = 'glitch'; } 
                                 else if(targetItem.mut === 1) { boltColor = '#afffff'; intensity = 7; type = 'shiny'; } 
-                                
-                                // GOD TIER CHECK (4 WAY)
-                                if (targetItem.tier >= 6) { boltColor = '#a855f7'; intensity = 10; is4Way = true; } 
-                                else if (targetItem.tier === 5) { boltColor = '#00ff00'; intensity = 9; is4Way = true; } 
-                                else if (targetItem.tier === 4) { boltColor = '#ff8c00'; intensity = 8; is4Way = true; } 
-                                
-                                // FORCE 4 WAY IF MUTATION ON HIGH TIER (>=3)
-                                if (targetItem.mut > 0 && targetItem.tier >= 3) is4Way = true;
-                                
-                                triggerTargetedLightning(id, boltColor, intensity, type, targetItem.tier, is4Way); playSound('win', targetItem); 
+                                else if(targetItem.tier >= 4) { boltColor = targetItem.color; intensity = 8; } 
+                                if (targetItem.tier >= 4) { is4Way = true; }
+                                else if (targetItem.tier === 3 && targetItem.mut > 0) { is4Way = true; }
+                                triggerTargetedLightning(id, boltColor, intensity, type, targetItem.tier, is4Way); 
+                                playSound('win', targetItem); playSound('residue'); 
                             }
                             if(isGod && id===3) { document.getElementById('machineBody').classList.add('god-active'); document.getElementById('machineBody').style.setProperty('--target-color', targetItem.color); }
                             finished++; if(finished === 3) setTimeout(resolve, isGod ? 1500 : 300);
@@ -597,35 +753,37 @@
             });
         }
 
-        function ensureBGM() { let active = currentBGM === 1 ? bgm1 : bgm2; if(active.paused) active.play().catch(()=>{}); }
+        // --- UI & SYSTEM ---
+        function updateUI() { 
+            document.getElementById('uiCash').innerText=state.cash.toLocaleString(); 
+            document.getElementById('uiCoins').innerText=state.coins.toLocaleString(); 
+            const pPill = document.getElementById('profilePill'); 
+            if(state.isGuest) { pPill.innerHTML = `👤 GUEST (LOGIN)`; pPill.className = 'profile-pill guest'; } 
+            else { pPill.innerHTML = `👤 ${state.user}`; pPill.className = 'profile-pill user'; } 
+        }
+
+        function save() { if(!state.isGuest && state.user) localStorage.setItem('casino_legend_v_final_' + state.user, JSON.stringify(state)); }
 
         function createJackpotParticles(container, color) {
-            for(let i=0; i<40; i++) {
+            for(let i=0; i<30; i++) {
                 const p = document.createElement('div'); p.className = 'jackpot-particle';
                 p.style.backgroundColor = color; p.style.boxShadow = `0 0 10px ${color}`;
-                const angle = Math.random() * Math.PI * 2; const dist = 100 + Math.random() * 200;
-                p.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
-                p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
-                const dur = 0.8 + Math.random() * 0.5;
-                p.style.animation = `particleExplode ${dur}s ease-out forwards`;
+                const angle = Math.random() * Math.PI * 2; const dist = 100 + Math.random() * 150;
+                p.style.setProperty('--tx', Math.cos(angle) * dist + 'px'); p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+                const dur = 0.6 + Math.random() * 0.4; p.style.animation = `particleExplode ${dur}s ease-out forwards`;
                 container.appendChild(p); setTimeout(() => p.remove(), dur * 1000);
             }
         }
 
+        let jackpotPromiseResolver = null;
         function showJackpotPopup(item) { 
             return new Promise(resolve => { 
                 jackpotPromiseResolver = resolve; 
-                const pop = document.getElementById('jackpotPopup'); 
-                const cont = document.getElementById('jackpotCont'); 
-                const title = document.getElementById('jackpotTitle'); 
+                const pop = document.getElementById('jackpotPopup'); const cont = document.getElementById('jackpotCont'); const title = document.getElementById('jackpotTitle'); 
                 cont.innerHTML = ''; 
                 let label = "GOD TIER FOUND!";
-                if (item.mut === 3) label = "DEMON MUTATION!";
-                else if (item.mut === 2) label = "GLITCH MUTATION!";
-                else if (item.mut === 1) label = "SHINY MUTATION!";
-                else if (item.tier === 6) label = "LEGENDARY JOKER!";
-                else if (item.tier === 5) label = "ANCIENT DRAGON!";
-                else if (item.tier === 4) label = "MYTHICAL PHOENIX!";
+                if (item.mut === 3) label = "DEMON MUTATION!"; else if (item.mut === 2) label = "GLITCH MUTATION!"; else if (item.mut === 1) label = "SHINY MUTATION!";
+                else if (item.tier === 6) label = "LEGENDARY JOKER!"; else if (item.tier === 5) label = "ANCIENT DRAGON!"; else if (item.tier === 4) label = "MYTHICAL PHOENIX!";
                 title.innerText = label; title.style.color = item.color;
                 createJackpotParticles(cont, item.color); 
                 const card = createCard(item); card.classList.add('jackpot-card'); 
@@ -633,128 +791,86 @@
                 playSound('thunder'); playSound('mut', item.mut); 
             }); 
         }
+        
         function closeJackpot() { document.getElementById('jackpotPopup').style.display = 'none'; resetVisuals(); ensureBGM(); if(jackpotPromiseResolver) jackpotPromiseResolver(); }
-        async function showRes(items) { const lay = document.getElementById('resultLayer'); const track = document.getElementById('cardTrack'); lay.style.display='flex'; track.innerHTML=''; for(let i=0; i<items.length; i++) { const item = items[i]; state.items.push(item); const el = createCard(item); track.appendChild(el); el.scrollIntoView({behavior:'smooth', inline:'center'}); await new Promise(r=>setTimeout(r,150)); el.classList.add('active'); if(item.mut > 0) playSound('mut', item.mut); else playSound('tier', item.tier); await new Promise(r=>setTimeout(r,200)); } }
+        
+        async function showRes(items) { 
+            const lay = document.getElementById('resultLayer'); const track = document.getElementById('cardTrack'); 
+            lay.style.display='flex'; track.innerHTML=''; 
+            for(let i=0; i<items.length; i++) { 
+                const item = items[i]; state.items.push(item); 
+                const el = createCard(item); track.appendChild(el); 
+                el.scrollIntoView({behavior:'smooth', inline:'center'}); 
+                await new Promise(r=>setTimeout(r,150)); 
+                el.classList.add('active'); 
+                if(item.mut > 0) playSound('mut', item.mut); else playSound('tier', item.tier); 
+                await new Promise(r=>setTimeout(r,200)); 
+            } 
+        }
         function closeResult() { document.getElementById('resultLayer').style.display='none'; resetVisuals(); updateUI(); ensureBGM(); }
         
         function createCard(item) { 
             const div = document.createElement('div'); let cls = 'card'; let label = ""; let color = item.color; 
             if(item.mut===3) { cls+=' fx-demon'; label="DEMON"; color='var(--demon)'; } else if(item.mut===2) { cls+=' fx-glitch'; label="GLITCH"; color='var(--glitch)'; } else if(item.mut===1) { cls+=' fx-shiny'; label="SHINY"; color='#fff'; } else if(item.tier>=4) cls+=' t-dragon'; 
-            div.className = cls; 
-            div.style.setProperty('--glow', item.mut > 0 ? color : item.color); 
+            div.className = cls; div.style.setProperty('--glow', item.mut > 0 ? color : item.color); 
             div.innerHTML = `<div class="card-img" style="text-shadow:0 0 20px ${item.color}">${item.emoji}</div><div class="card-name" style="color:${item.mut > 0 ? '#fff' : item.color}">${item.name}</div><div style="font-size:0.7rem; color:#aaa; margin-top:5px;">Val: ${item.val.toLocaleString()}</div>${label ? `<div class="mut-badge" style="background:${color}; color:${item.mut===3?'#fff':'#000'}">${label}</div>` : ''}`; return div; 
         }
 
-        // V32: FAST ANIM FOR PREVIEW
         function inspectItem(item) { 
-            const over = document.getElementById('previewOverlay'); 
-            const cont = document.getElementById('previewCont'); 
-            const actions = document.getElementById('sellActions'); 
+            const over = document.getElementById('previewOverlay'); const cont = document.getElementById('previewCont'); const actions = document.getElementById('sellActions'); 
             cont.innerHTML = ''; actions.innerHTML = ''; 
-            
-            const card = createCard(item); 
-            card.classList.add('active'); 
-            card.classList.add('jackpot-card'); 
-            card.classList.add('fast-anim'); // <--- FASTER ANIMATION CLASS
-            
+            const card = createCard(item); card.classList.add('active'); card.classList.add('jackpot-card'); card.classList.add('fast-anim'); 
             cont.appendChild(card); 
-            
-            const btn = document.createElement('button'); btn.className = 'btn-act'; btn.style.cssText = "background:#d00; padding:10px 20px; border:2px solid #fff; z-index:999;"; btn.innerHTML = `JUAL (💵 ${item.val.toLocaleString()})`; 
+            const btn = document.createElement('button'); btn.className = 'btn-act'; 
+            btn.style.cssText = "background:#d00; padding:10px 20px; border:2px solid #fff; z-index:999;"; 
+            btn.innerHTML = `JUAL (💵 ${item.val.toLocaleString()})`; 
             btn.onclick = (e) => { e.stopPropagation(); sellSingle(item); }; 
             actions.appendChild(btn); 
-            
-            over.style.display = 'flex'; 
-            setTimeout(() => over.classList.add('show'), 10); 
+            over.style.display = 'flex'; setTimeout(() => over.classList.add('show'), 10); 
             if(item.mut > 0) playSound('mut', item.mut); else playSound('tier', item.tier); 
         }
         
-        function closePreview() { 
-            const over = document.getElementById('previewOverlay');
-            over.classList.remove('show');
-            setTimeout(() => over.style.display='none', 200); 
-        }
-
+        function closePreview() { const over = document.getElementById('previewOverlay'); over.classList.remove('show'); setTimeout(() => over.style.display='none', 200); }
         function toggleBoost() { temp.boost=!temp.boost; document.getElementById('btnBoost').classList.toggle('active'); document.getElementById('machineBody').classList.toggle('boost-active'); playSound('boost'); }
-        function toggleMute() { alert("Volume diatur dari HP!"); }
-        
-        // MODAL UTILS
-        function showModal(id) { 
-            const el = document.getElementById(id); 
-            el.style.display='flex'; 
-            setTimeout(()=>el.classList.add('open'), 10); 
-        }
-        function hideModal(id) { 
-            const el = document.getElementById(id); 
-            el.classList.remove('open'); 
-            setTimeout(()=>el.style.display='none', 300); 
-        }
+        function showModal(id) { const el = document.getElementById(id); el.style.display='flex'; setTimeout(()=>el.classList.add('open'), 10); }
+        function hideModal(id) { const el = document.getElementById(id); el.classList.remove('open'); setTimeout(()=>el.style.display='none', 300); }
 
         function buy(t, g, c) { temp.pendingTx = { type: t, gain: g, cost: c }; const msg = t === 'coin' ? `BELI <span style="color:var(--gold)">${g.toLocaleString()} KOIN</span><br>HARGA: <span style="color:#4ade80">Rp ${c.toLocaleString()}</span>` : `TOP UP SALDO<br><span style="color:#4ade80">Rp ${c.toLocaleString()}</span>`; document.getElementById('confirmMsg').innerHTML = msg; document.getElementById('confirmModal').style.display = 'flex'; }
         function processTransaction() { const tx = temp.pendingTx; if(!tx) return; if(tx.type === 'coin') { if(state.cash < tx.cost) { showSystemAlert("INSUFFICIENT FUNDS"); closeConfirm(); return; } state.cash -= tx.cost; state.coins += tx.gain; } else { state.cash += tx.gain; } updateUI(); save(); playSound('tier', 1); closeConfirm(); }
         function closeConfirm() { document.getElementById('confirmModal').style.display = 'none'; temp.pendingTx = null; }
 
-        function sellSingle(item) {
-            openSellModal(`JUAL ITEM INI SEHARGA<br><span style="color:#4ade80; font-size:1.2rem;">💵 ${item.val.toLocaleString()}</span>?`, () => {
-                state.items = state.items.filter(i => i.uid !== item.uid); 
-                state.cash += item.val; 
-                updateUI(); save(); playSound('tier', 1); 
-                closePreview(); openInv('all');
-            });
-        }
-
-        function sellTrash() { 
-            const trash = state.items.filter(i=>i.tier===0 && i.mut===0); 
-            const val = trash.reduce((a,b)=>a+b.val,0); 
-            if(val>0) { 
-                openSellModal(`JUAL SEMUA SAMPAH SEHARGA<br><span style="color:#4ade80; font-size:1.2rem;">💵 ${val.toLocaleString()}</span>?`, () => {
-                    state.items = state.items.filter(i=>i.tier>0 || i.mut>0); 
-                    state.cash+=val; 
-                    updateUI(); save(); openInv('all');
-                });
-            } else showSystemAlert("TIDAK ADA SAMPAH"); 
-        }
-
-        function openSellModal(msg, callback) {
-            document.getElementById('sellMsg').innerHTML = msg;
-            sellCallback = callback;
-            document.getElementById('sellModal').style.display = 'flex';
-        }
-
-        function closeSellModal() {
-            document.getElementById('sellModal').style.display = 'none';
-            sellCallback = null;
-        }
-
-        document.getElementById('btnConfirmSell').onclick = () => {
-            if(sellCallback) sellCallback();
-            closeSellModal();
-        };
+        function sellSingle(item) { openSellModal(`JUAL ITEM INI SEHARGA<br><span style="color:#4ade80; font-size:1.2rem;">💵 ${item.val.toLocaleString()}</span>?`, () => { state.items = state.items.filter(i => i.uid !== item.uid); state.cash += item.val; updateUI(); save(); playSound('tier', 1); closePreview(); openInv('all'); }); }
+        function sellTrash() { const trash = state.items.filter(i=>i.tier===0 && i.mut===0); const val = trash.reduce((a,b)=>a+b.val,0); if(val>0) { openSellModal(`JUAL SEMUA SAMPAH SEHARGA<br><span style="color:#4ade80; font-size:1.2rem;">💵 ${val.toLocaleString()}</span>?`, () => { state.items = state.items.filter(i=>i.tier>0 || i.mut>0); state.cash+=val; updateUI(); save(); openInv('all'); }); } else showSystemAlert("TIDAK ADA SAMPAH"); }
+        function openSellModal(msg, callback) { document.getElementById('sellMsg').innerHTML = msg; sellCallback = callback; document.getElementById('sellModal').style.display = 'flex'; }
+        function closeSellModal() { document.getElementById('sellModal').style.display = 'none'; sellCallback = null; }
+        document.getElementById('btnConfirmSell').onclick = () => { if(sellCallback) sellCallback(); closeSellModal(); };
 
         function openInv(filter) { 
-            const el = document.getElementById('invModal');
-            el.style.display='flex'; 
-            setTimeout(()=>el.classList.add('open'), 10);
-
+            const el = document.getElementById('invModal'); el.style.display='flex'; setTimeout(()=>el.classList.add('open'), 10);
             const g = document.getElementById('invGrid'); g.innerHTML=''; 
             let list = [...state.items].sort((a,b) => { if(b.tier !== a.tier) return b.tier - a.tier; return b.mut - a.mut; }); 
             if(filter==='mutant') list = list.filter(i=>i.mut>0); 
-            
             list.forEach(i => { 
-                const el = document.createElement('div'); 
-                el.className = 'inv-card-simple'; 
-                if(i.mut===3) el.classList.add('inv-mut-3');
-                else if(i.mut===2) el.classList.add('inv-mut-2');
-                else if(i.mut===1) el.classList.add('inv-mut-1');
-                else el.style.borderColor = i.color;
-                
+                const el = document.createElement('div'); el.className = 'inv-card-simple'; 
+                if(i.mut===3) el.classList.add('inv-mut-3'); else if(i.mut===2) el.classList.add('inv-mut-2'); else if(i.mut===1) el.classList.add('inv-mut-1'); else el.style.borderColor = i.color;
                 el.onclick = () => inspectItem(i); 
-                el.innerHTML = `<div style="font-size:35px; text-shadow:0 0 5px ${i.color}">${i.emoji}</div><div style="color:${i.color}; font-size:0.7rem; font-weight:bold; margin-top:5px;">${i.name}</div>`; 
-                g.appendChild(el); 
+                el.innerHTML = `<div style="font-size:35px; text-shadow:0 0 5px ${i.color}">${i.emoji}</div><div style="color:${i.color}; font-size:0.7rem; font-weight:bold; margin-top:5px;">${i.name}</div>`; g.appendChild(el); 
             }); 
         }
 
         function renderShop() { const cList=[{g:300,c:10000},{g:1000,c:20000},{g:1500,c:26000},{g:2500,c:40000},{g:5100,c:80000},{g:10300,c:160000},{g:20600,c:320000},{g:350000,c:5000000}]; const sList=[10000,25000,50000,80000,100000,200000,350000,500000,1000000,5000000]; document.getElementById('coinGrid').innerHTML = cList.map(o=>`<div class="shop-item" onclick="buy('coin',${o.g},${o.c})"><div>🪙</div><div>${o.g.toLocaleString()}</div><div style="color:var(--gold)">${o.c.toLocaleString()}</div></div>`).join(''); document.getElementById('cashGrid').innerHTML = sList.map(v=>`<div class="shop-item" onclick="buy('cash',${v},${v})"><div>💵</div><div>${v.toLocaleString()}</div><div style="color:#4ade80">Rp ${v.toLocaleString()}</div></div>`).join(''); }
         function redeem() { const c = document.getElementById('codeInput').value.toUpperCase(); if(c==='ENGGACOR') state.cash+=100000000; else if(c==='POTIONDARIENG') { temp.luck=true; document.getElementById('luckStatus').style.display='flex'; document.getElementById('machineBody').classList.add('glow-demon'); playSound('mut', 3); setTimeout(()=>{temp.luck=false;document.getElementById('luckStatus').style.display='none';document.getElementById('machineBody').classList.remove('glow-demon')},60000); } updateUI(); save(); }
+
+        function showSystemAlert(msg, showCancel = false, cancelCallback = null) { 
+            document.getElementById('alertText').innerHTML = msg; document.getElementById('systemAlert').style.display = 'flex'; 
+            const btnCancel = document.getElementById('btnAlertCancel');
+            if(showCancel) { btnCancel.style.display = 'inline-block'; temp.alertCallback = cancelCallback; } 
+            else { btnCancel.style.display = 'none'; temp.alertCallback = null; }
+            playSound('tier', 1); 
+        }
+        function handleAlertOk() { document.getElementById('systemAlert').style.display = 'none'; }
+        function handleAlertCancel() { document.getElementById('systemAlert').style.display = 'none'; if(temp.alertCallback) temp.alertCallback(); }
+        function handleProfileClick() { if(state.isGuest) { if(confirm("LOGIN TO ACCESS FULL FEATURES?\n(Current guest data will be lost)")) { document.getElementById('loginScreen').style.display='flex'; } } }
     </script>
 </body>
 </html>
