@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GOD PERFECT: TRUE THUNDER V7 - REVISED</title>
+    <title>GOD PERFECT: TRUE THUNDER V12 - ULTIMATE REVISION</title>
     <style>
         /* ===== VARIABLES ===== */
         :root {
@@ -12,8 +12,9 @@
             --demon: #ff003c;
             --glitch: #00ffff;
             --joker: #a855f7;
-            --dragon: #00ff00;
-            --phoenix: #ff8c00;
+            --dragon: #006400;
+            --phoenix: #FF4500;
+            --shiny: #ffffff;
             --aura-color: #000;
         }
 
@@ -24,182 +25,235 @@
             display: flex; flex-direction: column; align-items: center;
         }
 
-        /* LAYERS */
-        .nebula-bg { position: fixed; inset: 0; z-index: -2; background: radial-gradient(circle at 50% 40%, #1a0b2e 0%, #000 80%); }
+        /* LAYERS & BACKGROUND */
+        .nebula-bg { position: fixed; inset: 0; z-index: -2; background: radial-gradient(circle at 50% 40%, #0d0d15 0%, #000 80%); }
+        .stars { position:absolute; inset:0; background-image: radial-gradient(white 1px, transparent 1px); background-size: 50px 50px; opacity: 0.1; }
+        
         #particleCanvas { position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0.6; }
+        #lightningCanvas { position: fixed; inset: 0; z-index: 9000; pointer-events: none; mix-blend-mode: screen; }
         
-        /* LIGHTNING CANVAS (Z-Index tinggi agar di atas kegelapan) */
-        #lightningCanvas { position: fixed; inset: 0; z-index: 200; pointer-events: none; mix-blend-mode: screen; }
-        
-        /* DIMMING OVERLAY (DARK AURA REVISED) */
-        .dim-overlay {
-            position: fixed; inset: 0; 
-            z-index: 140; 
-            opacity: 0; 
-            transition: opacity 0.1s ease-out;
-            pointer-events: none;
-            background: #000; /* Fallback */
-        }
-        /* Saat aktif, dia hitam pekat di pinggir, bolong di tengah */
-        .dim-overlay.active { opacity: 1.0; } 
+        /* DIM OVERLAY */
+        .dim-overlay { position: fixed; inset: 0; z-index: 8000; opacity: 0; transition: opacity 0.2s ease-out; pointer-events: none; background: rgba(0,0,0,0.9); }
+        .dim-overlay.active { opacity: 1; pointer-events: auto; } 
 
-        /* UI ELEMENTS */
+        /* UI SYSTEM & START SCREEN */
         #startScreen, #loginScreen { position: fixed; inset: 0; z-index: 9999; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #loginScreen { background: rgba(0,0,0,0.95); z-index: 5000; display: none; backdrop-filter: blur(10px); }
+        #loginScreen { background: rgba(0,0,0,0.95); z-index: 9999; display: none; backdrop-filter: blur(10px); }
         .btn-start { padding: 20px 50px; font-size: 1.5rem; font-weight: 900; background: linear-gradient(45deg, var(--demon), #500); color: #fff; border: 3px solid #fff; border-radius: 50px; box-shadow: 0 0 50px var(--demon); cursor: pointer; animation: pulse 1s infinite; }
 
-        .login-card { width: 90%; max-width: 380px; background: linear-gradient(145deg, #111, #050505); border: 1px solid #333; border-top: 4px solid var(--gold); border-radius: 15px; padding: 40px 30px; box-shadow: 0 0 60px rgba(0,0,0,0.8), 0 0 15px rgba(255, 215, 0, 0.1); text-align: center; position: relative; overflow: hidden; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .login-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
-        .login-title { font-size: 2rem; font-weight: 900; letter-spacing: 2px; color: #fff; margin-bottom: 5px; text-shadow: 0 0 20px rgba(255,255,255,0.2); text-transform: uppercase; }
-        .login-sub { font-size: 0.8rem; color: var(--gold); margin-bottom: 30px; letter-spacing: 3px; text-transform: uppercase; }
-        .inp-group { position: relative; margin-bottom: 20px; }
-        .login-input { width: 100%; padding: 15px; background: #0a0a0a; border: 1px solid #333; color: #fff; border-radius: 8px; font-size: 1rem; text-align: center; letter-spacing: 1px; transition: 0.3s; }
-        .login-input:focus { border-color: var(--gold); box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); outline: none; }
-        .btn-main-login { width: 100%; padding: 15px; background: linear-gradient(90deg, #b8860b, var(--gold)); border: none; border-radius: 8px; color: #000; font-weight: 900; font-size: 1rem; cursor: pointer; text-transform: uppercase; box-shadow: 0 5px 15px rgba(255, 215, 0, 0.2); transition: 0.2s; }
-        .btn-main-login:active { transform: scale(0.98); }
-        .divider { margin: 20px 0; color: #444; font-size: 0.8rem; display: flex; align-items: center; gap: 10px; }
-        .divider::before, .divider::after { content:''; flex:1; height:1px; background:#222; }
-        .btn-guest { width: 100%; padding: 12px; background: transparent; border: 1px solid #444; color: #888; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
-        .btn-guest:hover { border-color: #fff; color: #fff; background: #111; }
+        /* LOGIN STYLE */
+        .login-card { width: 90%; max-width: 380px; background: linear-gradient(145deg, #111, #050505); border: 1px solid #333; border-top: 4px solid var(--gold); border-radius: 20px; padding: 40px 30px; box-shadow: 0 0 60px rgba(0,0,0,0.8); text-align: center; }
+        .login-title { font-size: 2rem; font-weight: 900; color: #fff; margin-bottom: 5px; text-shadow: 0 0 20px rgba(255,255,255,0.2); text-transform: uppercase; }
+        .inp-group { position: relative; margin-bottom: 15px; width: 100%; }
+        .login-input { width: 100%; padding: 15px; background: #0a0a0a; border: 1px solid #333; color: #fff; border-radius: 10px; font-size: 1rem; text-align: center; transition: 0.3s; }
+        .login-input:focus { border-color: var(--gold); outline: none; }
+        .pass-toggle { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #666; font-size: 1.2rem; z-index: 10; }
+        .btn-main-login { width: 100%; padding: 15px; background: linear-gradient(90deg, #b8860b, var(--gold)); border: none; border-radius: 10px; color: #000; font-weight: 900; font-size: 1rem; cursor: pointer; margin-top: 15px; }
+        .btn-guest { width: 100%; padding: 12px; background: transparent; border: 1px solid #444; color: #888; border-radius: 10px; margin-top: 15px; cursor: pointer; }
 
         /* TOP BAR */
         .top-bar { width: 100%; max-width: 600px; padding: 15px; background: linear-gradient(180deg, #222, #111); border-bottom: 2px solid #444; display: flex; justify-content: space-between; align-items: center; z-index: 4000; box-shadow: 0 5px 20px #000; gap: 10px; }
-        .profile-pill { background: #000; border: 1px solid #333; padding: 8px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; box-shadow: inset 0 0 10px #111; color: #fff; cursor: pointer; transition: 0.2s; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .profile-pill.guest { border-color: var(--demon); color: #aaa; } .profile-pill.user { border-color: var(--gold); color: var(--gold); } .profile-pill:active { transform: scale(0.95); }
+        .profile-pill { background: #000; border: 1px solid #333; padding: 8px 12px; border-radius: 10px; font-weight: bold; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; color: #fff; cursor: pointer; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .profile-pill.guest { border-color: var(--demon); color: #aaa; } .profile-pill.user { border-color: var(--gold); color: var(--gold); }
         .stat-group { display: flex; gap: 5px; flex: 1; justify-content: center; }
-        .stat-pill { background: #000; border: 1px solid #333; padding: 8px 10px; border-radius: 8px; font-weight: bold; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; box-shadow: inset 0 0 10px #111; }
-        .btn-icon { background: #333; border: 1px solid #555; color: #fff; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-
-        /* ALERTS & MODALS */
-        #systemAlert { position: fixed; inset: 0; z-index: 99999; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; }
-        .alert-box { width: 320px; background: #0f0f0f; border: 1px solid #333; border-left: 4px solid var(--glitch); padding: 25px; border-radius: 8px; box-shadow: 0 0 50px rgba(0,255,255,0.1); transform: scale(0.9); animation: popIn 0.2s forwards; position: relative; }
-        .alert-icon { font-size: 2rem; margin-bottom: 10px; }
-        .alert-head { color: var(--glitch); font-size: 0.8rem; font-weight: 900; letter-spacing: 2px; margin-bottom: 10px; }
-        .alert-msg { color: #fff; font-size: 1rem; line-height: 1.5; margin-bottom: 25px; }
-        .alert-btn-group { display: flex; gap: 10px; }
-        .btn-alert { flex: 1; padding: 12px; background: var(--glitch); color: #000; border: none; font-weight: 900; cursor: pointer; text-transform: uppercase; border-radius: 4px; }
-        .btn-alert-cancel { flex: 1; padding: 12px; background: #333; color: #fff; border: 1px solid #555; font-weight: 900; cursor: pointer; text-transform: uppercase; border-radius: 4px; display: none; }
-        .btn-alert-cancel:hover { background: #444; }
-
-        #confirmModal, #sellModal { position: fixed; inset: 0; z-index: 6000; background: rgba(0,0,0,0.9); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; }
-        .confirm-box, .sell-box { width: 300px; background: linear-gradient(135deg, #222, #000); border: 2px solid var(--gold); border-radius: 15px; padding: 25px; text-align: center; box-shadow: 0 0 30px rgba(255, 215, 0, 0.2); transform: scale(0.9); animation: popIn 0.2s forwards; }
-        .sell-box { background: linear-gradient(135deg, #200, #000); border-color: var(--demon); box-shadow: 0 0 50px rgba(255, 0, 60, 0.3); }
-        .confirm-title { color: var(--gold); font-size: 1.2rem; font-weight: 900; margin-bottom: 10px; text-transform: uppercase; }
-        .sell-title { color: var(--demon); font-size: 1.2rem; font-weight: 900; margin-bottom: 10px; text-transform: uppercase; }
-        .confirm-msg { color: #ccc; margin-bottom: 25px; font-size: 0.9rem; line-height: 1.4; }
-        .confirm-actions { display: flex; gap: 10px; }
-        .btn-yes { flex: 1; background: var(--gold); color: #000; border: none; padding: 12px; font-weight: 800; border-radius: 8px; cursor: pointer; }
-        .btn-sell-yes { flex: 1; background: var(--demon); color: #fff; border: none; padding: 12px; font-weight: 800; border-radius: 8px; cursor: pointer; }
-        .btn-no { flex: 1; background: #333; color: #fff; border: 1px solid #555; padding: 12px; font-weight: 800; border-radius: 8px; cursor: pointer; }
-
-        /* MACHINE CASING */
-        .stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 5vh; position: relative; perspective: 1000px; width: 100%; z-index: 10; }
-        .machine-casing { position: relative; padding: 15px; width: 340px; background: linear-gradient(135deg, #2a2a2a 0%, #111 40%, #000 100%); border-radius: 20px; border: 4px solid #444; box-shadow: 0 0 0 5px #111, 0 0 0 8px #333, 0 0 60px rgba(0,0,0,0.8); margin-bottom: 20px; transition: 0.3s; z-index: 10; overflow: hidden; }
-        
-        /* INNER GLOW (Tetap ada untuk efek aura mesin, tapi overlay layar beda) */
-        .machine-casing::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 100; border-radius: 15px; background: radial-gradient(circle at center, transparent 30%, var(--aura-color) 80%, #000 100%); opacity: 0; transition: opacity 0.2s ease-out; mix-blend-mode: hard-light; }
-        .machine-casing.aura-active::after { opacity: 1; animation: auraPulse 0.5s infinite alternate ease-in-out; }
-
-        @keyframes auraPulse { 0% { opacity: 0.8; transform: scale(1); filter: brightness(1); } 100% { opacity: 1.0; transform: scale(1.05); filter: brightness(1.5); } }
-
-        .machine-casing.boost-active { border-color: var(--glitch); animation: boostPulse 1.5s infinite alternate; }
-        .machine-casing.god-active { border-color: var(--target-color) !important; box-shadow: 0 0 80px var(--target-color), inset 0 0 50px var(--target-color) !important; animation: shake 0.5s infinite !important; }
-        .machine-casing.glow-demon { box-shadow: 0 0 60px var(--demon); border-color: var(--demon); }
-        
-        .screw { position: absolute; width: 12px; height: 12px; background: radial-gradient(circle, #555, #222); border-radius: 50%; box-shadow: inset 0 0 2px #000; z-index: 101; } 
-        .tl { top: 10px; left: 10px; } .tr { top: 10px; right: 10px; } .bl { bottom: 10px; left: 10px; } .br { bottom: 10px; right: 10px; }
-        
-        .slot-window { width: 100%; height: 450px; background: #000; border: 4px solid #222; border-radius: 10px; box-shadow: inset 0 0 30px #000; display: flex; gap: 4px; padding: 4px; position: relative; overflow: hidden; }
-        .payline { position: absolute; top: 50%; left: 0; right: 0; height: 4px; background: rgba(255,0,0,0.4); z-index: 20; transform: translateY(-50%); pointer-events: none; box-shadow: 0 0 10px red; }
-        .reel { flex: 1; background: #080808; border-radius: 4px; border: 1px solid #1a1a1a; overflow: hidden; position: relative; mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent); }
-        .reel-strip { display: flex; flex-direction: column; align-items: center; will-change: transform; }
-        .slot-icon { height: 140px; width: 100%; display: flex; align-items: center; justify-content: center; font-size: 70px; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); }
-        .blur-spin { filter: blur(4px); transform: scaleY(1.2); opacity: 0.8; }
-        
-        .controls { display: grid; grid-template-columns: 1fr 100px 1fr; gap: 10px; width: 340px; align-items: end; position: relative; z-index: 150; }
-        .btn-act { border: none; border-radius: 12px; color: #fff; cursor: pointer; font-weight: 800; text-transform: uppercase; box-shadow: 0 5px 0 #000; transition: 0.1s; } .btn-act:active { transform: translateY(5px); box-shadow: 0 0 0 #000; }
-        .btn-boost { height: 60px; background: #333; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; } .btn-boost.active { background: linear-gradient(45deg, #06b6d4, #0891b2); color: #fff; box-shadow: 0 0 20px var(--glitch); border: 1px solid #fff; }
-        .btn-spin { width: 90px; height: 90px; border-radius: 50%; margin: 0 auto; background: radial-gradient(circle at 30% 30%, var(--gold), #b8860b); border: 4px solid #8a6000; box-shadow: 0 0 50px rgba(255,215,0,0.2), 0 10px 0 #3e2b00; color: #221; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.1s; z-index: 10; } .btn-spin:active { transform: translateY(10px); box-shadow: 0 0 0 #3e2b00; } .btn-spin:disabled { filter: grayscale(1); cursor: not-allowed; }
-        .btn-multi { height: 60px; background: linear-gradient(45deg, #7c3aed, #4c1d95); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2; }
-
-        /* POPUPS & PARTICLES */
-        #jackpotPopup { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; animation: zoomIn 0.3s; }
-        .jackpot-text { font-size: 3rem; font-weight: 900; text-transform: uppercase; margin-bottom: 80px; text-shadow: 0 0 20px #fff; color: #fff; text-align: center; animation: pulse 0.2s infinite; position: relative; z-index: 20; }
-        #jackpotCont { position: relative; display: flex; justify-content: center; align-items: center; }
-        
-        .result-layer { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; display: none; flex-direction: column; justify-content: center; align-items: center; }
-        .card-scroller { width: 100%; overflow-x: auto; padding: 40px 0; display: flex; scroll-behavior: smooth; } .card-scroller::-webkit-scrollbar { display: none; }
-        .card-track { display: flex; gap: 25px; padding: 0 50vw; width: max-content; }
+        .stat-pill { background: #000; border: 1px solid #333; padding: 8px 10px; border-radius: 10px; font-weight: bold; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; }
+        .btn-icon { background: #333; border: 1px solid #555; color: #fff; width: 40px; height: 40px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .btn-close-red { width: 30px; height: 30px; background: #500; border: 1px solid #f00; color: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; }
 
         /* MODALS */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); opacity: 0; transition: opacity 0.3s ease; }
-        .modal.open { display: flex; opacity: 1; }
-        .modal-box { width: 90%; max-width: 450px; background: #1a1a1a; border: 2px solid #444; text-align: left; display: flex; flex-direction: column; max-height: 80vh; transform: translateY(50px) scale(0.9); transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
-        .modal.open .modal-box { transform: translateY(0) scale(1); }
-        .modal-body { overflow-y: auto; } .shop-grid, .inv-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; } .inv-grid { grid-template-columns: repeat(3, 1fr); }
-        .shop-item { background: #222; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #333; cursor: pointer; transition: 0.2s; } .shop-item:hover { border-color: var(--gold); background: #2a2a2a; transform: scale(1.02); }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.4s ease; pointer-events: none; z-index: 5000; }
+        .modal.open { display: flex; opacity: 1; pointer-events: auto; }
+        .modal-box { width: 95%; max-width: 450px; background: #151515; border: 2px solid #444; text-align: left; display: flex; flex-direction: column; max-height: 85vh; transform: scale(0.95); transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); border-radius: 20px; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+        .modal.open .modal-box { transform: scale(1); }
+        .modal-header { padding: 20px; background: #1a1a1a; border-bottom: 1px solid #333; display: flex; justify-content: center; align-items: center; position: relative; border-top-left-radius: 20px; border-top-right-radius: 20px; }
+        .modal-title { font-size: 1.1rem; font-weight: 900; letter-spacing: 1px; color: #fff; text-transform: uppercase; text-align: center; }
+        .modal-close-abs { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); }
+        .modal-body { overflow-y: auto; padding: 20px; }
+
+        /* Z-INDEX */
+        #profileModal, #shopModal, #invModal { z-index: 5000; }
+        #filterModal { z-index: 6000; }
+        #jackpotPopup { z-index: 9500; }
         
-        .inv-card-simple { aspect-ratio: 1; background: #151515; border: 2px solid #333; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; cursor: pointer; transition: 0.1s; }
-        .inv-card-simple:active { transform: scale(0.95); }
+        /* PREVIEW OVERLAY */
+        #previewOverlay { 
+            position: fixed; inset: 0; 
+            z-index: 7000; 
+            background: rgba(0,0,0,0.9); 
+            display: none; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            backdrop-filter: blur(8px);
+        } 
+
+        /* INVENTORY UI */
+        .inv-tabs { display: flex; background: #000; border-radius: 12px; margin-bottom: 15px; position: relative; border: 1px solid #333; padding: 4px; }
+        .tab-btn { flex: 1; padding: 12px; background: transparent; border: none; color: #666; font-weight: bold; font-size: 0.9rem; z-index: 2; cursor: pointer; text-transform: uppercase; transition: 0.2s; text-align: center; }
+        .tab-btn.active { color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .tab-indicator { position: absolute; top: 4px; bottom: 4px; width: 33.33%; background: #b91c1c; border-radius: 10px; z-index: 1; transition: left 0.3s ease; box-shadow: 0 0 10px rgba(255,0,0,0.3); }
+
+        .inv-actions { display: flex; gap: 8px; margin-bottom: 15px; }
+        .btn-inv-act { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #444; background: #222; color: #fff; font-size: 0.75rem; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        
+        .inv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; min-height: 200px; padding-bottom: 50px; }
+        .inv-card-simple { aspect-ratio: 0.9; background: #151515; border: 2px solid #333; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; cursor: pointer; transition: 0.1s; }
         .inv-mut-1 { border-color: #afffff; box-shadow: inset 0 0 10px rgba(175, 255, 255, 0.3); }
         .inv-mut-2 { border-color: #a855f7; box-shadow: inset 0 0 10px rgba(168, 85, 247, 0.3); }
         .inv-mut-3 { border-color: #ff0000; box-shadow: inset 0 0 10px rgba(255, 0, 0, 0.3); }
 
-        #previewOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 7000; display: none; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.2s; opacity: 0; pointer-events: none; } 
-        #previewOverlay.show { opacity: 1; pointer-events: auto; }
-        #previewCont { transform: scale(1.0); } 
-        #sellActions { margin-top: 60px; display: flex; gap: 10px; z-index: 601; pointer-events: auto; }
+        /* MACHINE */
+        .stage { flex: 1; display: flex; flex-direction: column; align-items: center; padding-top: 5vh; position: relative; width: 100%; z-index: 10; }
+        .machine-casing { position: relative; padding: 15px; width: 340px; background: linear-gradient(135deg, #2a2a2a 0%, #111 40%, #000 100%); border-radius: 20px; border: 4px solid #444; box-shadow: 0 0 0 5px #111, 0 0 0 8px #333, 0 0 60px rgba(0,0,0,0.8); margin-bottom: 20px; z-index: 10; overflow: hidden; transition: border-color 0.1s; }
+        
+        .slot-window { width: 100%; height: 450px; background: #000; border: 4px solid #222; border-radius: 10px; display: flex; gap: 4px; padding: 4px; position: relative; overflow: hidden; }
+        .reel { flex: 1; background: #080808; border-radius: 4px; overflow: hidden; position: relative; }
+        .reel-strip { display: flex; flex-direction: column; align-items: center; }
+        .slot-icon { height: 140px; width: 100%; display: flex; align-items: center; justify-content: center; font-size: 70px; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); }
+        .blur-spin { filter: blur(4px); transform: scaleY(1.2); opacity: 0.8; }
+        
+        .controls { display: grid; grid-template-columns: 1fr 100px 1fr; gap: 10px; width: 340px; align-items: end; position: relative; z-index: 150; }
+        .btn-act { border: none; border-radius: 15px; color: #fff; cursor: pointer; font-weight: 800; text-transform: uppercase; box-shadow: 0 5px 0 #000; transition: 0.1s; } .btn-act:active { transform: translateY(5px); box-shadow: 0 0 0 #000; }
+        .btn-boost { height: 60px; background: #333; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; } 
+        .btn-boost.active { background: linear-gradient(45deg, #06b6d4, #0891b2); color: #fff; box-shadow: 0 0 20px var(--glitch); border: 1px solid #fff; }
+        .btn-spin { width: 90px; height: 90px; border-radius: 50%; margin: 0 auto; background: radial-gradient(circle at 30% 30%, var(--gold), #b8860b); border: 4px solid #8a6000; box-shadow: 0 0 50px rgba(255,215,0,0.2), 0 10px 0 #3e2b00; color: #221; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.1s; z-index: 10; } .btn-spin:active { transform: translateY(10px); box-shadow: 0 0 0 #3e2b00; } .btn-spin:disabled { filter: grayscale(1); cursor: not-allowed; }
+        .btn-multi { height: 60px; background: linear-gradient(45deg, #7c3aed, #4c1d95); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2; }
 
-        .jackpot-particle { position: absolute; width: 8px; height: 8px; border-radius: 50%; top: 50%; left: 50%; pointer-events: none; opacity: 0; }
+        /* === NEW CARD SYSTEM & ANIMATIONS === */
+        
+        .card { width: 260px; height: 380px; background: #151515; border: 4px solid #333; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; flex-shrink: 0; overflow: hidden; --glow: #555; z-index: 10; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+        .card .card-img { font-size: 130px; position: relative; z-index: 5; }
+        .card .card-name { font-size: 1.2rem; margin-top: 20px; text-align: center; padding: 0 10px; z-index: 5; font-weight: 900; letter-spacing: 1px; }
+        .card-bg-fx { position: absolute; inset: 0; z-index: 1; opacity: 0.4; }
 
-        .card { width: 220px; height: 320px; background: #151515; border: 3px solid #333; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; flex-shrink: 0; overflow: hidden; --glow: #555; transform: scale(0.8); opacity: 0.5; transition: 0.3s; }
-        .card.active { transform: scale(1.1); opacity: 1; z-index: 10; border-color: var(--glow); box-shadow: 0 0 40px var(--glow), inset 0 0 20px var(--glow); }
-
-        @keyframes godEntrance {
-            0% { opacity: 0; transform: scale(0.3) rotate(-15deg); filter: brightness(0) blur(10px); }
-            40% { opacity: 1; transform: scale(1.6) rotate(5deg); filter: brightness(4) blur(0px); } 
-            60% { transform: scale(1.3) rotate(-2deg); filter: brightness(1.5); }
-            80% { transform: scale(1.55) rotate(1deg); filter: brightness(1.1); }
-            100% { transform: scale(1.5) rotate(0deg); filter: brightness(1); }
+        /* ANIMASI KARTU - UPDATED FOR REQUEST */
+        
+        /* DEMON: Increased Scale Amplitude */
+        @keyframes demonFloat { 
+            0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 15px rgba(255, 0, 60, 0.7)); } 
+            50% { transform: translateY(-20px) scale(1.15); filter: drop-shadow(0 0 30px rgba(255, 0, 60, 0.9)); } 
         }
-        .jackpot-card { animation: godEntrance 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards !important; box-shadow: 0 0 100px var(--glow), inset 0 0 50px var(--glow) !important; }
+
+        /* GLITCH: Faster & More Chaos */
+        @keyframes glitchMove { 
+            0% { transform: translate(0, 0) scale(1); filter: drop-shadow(5px 0 0 red) drop-shadow(-5px 0 0 cyan); } 
+            20% { transform: translate(-9px, 7px) scale(1.06); } 
+            40% { transform: translate(8px, -7px) scale(0.96); }
+            60% { transform: translate(-6px, -6px) scale(1.04); }
+            80% { transform: translate(6px, 6px) scale(1.04); }
+            100% { transform: translate(0, 0); } 
+        }
+
+        /* Glitch Chaos for Text/Img */
+        @keyframes glitchChaos { 
+            0% { transform: translate(0); text-shadow: -4px 0 red, 4px 0 blue; clip-path: inset(0 0 0 0); }
+            20% { transform: translate(-5px, 5px) skewX(20deg); clip-path: inset(10% 0 80% 0); }
+            40% { transform: translate(5px, -5px) skewY(-10deg); clip-path: inset(80% 0 5% 0); }
+            60% { transform: translate(-5px, -5px); clip-path: inset(40% 0 40% 0); }
+            80% { transform: translate(5px, 5px) skewX(-20deg); clip-path: inset(5% 0 80% 0); }
+            100% { transform: translate(0); text-shadow: -4px 0 red, 4px 0 blue; clip-path: inset(0 0 0 0); }
+        }
+        .anim-glitch-img { animation: glitchChaos 0.3s infinite linear; filter: contrast(1.8) brightness(1.2); }
+
+        @keyframes shinyFloat { 0%, 100% { transform: translateY(0) scale(1); filter: brightness(1) drop-shadow(0 0 10px white); } 50% { transform: translateY(-15px) scale(1.08); filter: brightness(1.5) drop-shadow(0 0 20px white); } }
         
-        .fast-anim { animation-duration: 1.0s !important; }
-
-        .t-joker { --glow: var(--joker); background: linear-gradient(135deg, #200020, #000); }
-        .t-dragon { --glow: var(--dragon); background: linear-gradient(135deg, #002000, #000); }
-        .t-phoenix { --glow: var(--phoenix); background: linear-gradient(135deg, #201000, #000); }
+        @keyframes shinySweep {
+            0% { background-position: -200% 0; opacity: 0; }
+            50% { opacity: 1; }
+            100% { background-position: 200% 0; opacity: 0; }
+        }
         
-        .fx-shiny { --glow: #afffff; animation: shinyBorder 2s infinite; }
-        .fx-shiny::after { content:''; position:absolute; inset:-100%; background:linear-gradient(45deg,transparent,rgba(175, 255, 255, 0.8),transparent); animation:shinePass 1.5s infinite; transform:rotate(45deg); pointer-events:none; }
-        .fx-glitch { --glow: #a855f7; animation: glitchBorder 0.2s infinite; background: repeating-linear-gradient(0deg, #000, #000 2px, #200020 2px, #200020 4px); }
-        .fx-glitch .card-img { animation: glitchImg 0.1s infinite steps(2) alternate; filter: drop-shadow(-4px 0 #ff00ff) drop-shadow(4px 0 #00ffff); }
-        .fx-demon { --glow: #ff0000; border-width: 5px; background: #000; box-shadow: 0 0 80px #ff0000, 0 0 150px #800000, inset 0 0 80px #ff0000 !important; animation: demonShake 2s infinite, pulseRed 0.4s infinite alternate; }
-        .fx-demon .card-img { animation: demonFloat 1s infinite alternate; filter: drop-shadow(0 0 50px #ff0000); }
+        @keyframes jokerFloat { 0%, 100% { transform: translateY(0) rotateY(0deg); } 50% { transform: translateY(-10px) rotateY(10deg); } }
+        @keyframes dragonAppear { 0% { transform: scale(0.9); } 50% { transform: scale(1.1); } 100% { transform: scale(0.9); } }
+        @keyframes phoenixFly { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        @keyframes commonFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        
+        .card-demon .card-img { animation: demonFloat 1.5s ease-in-out infinite; }
+        .card-glitch .card-img { animation: glitchMove 0.3s linear infinite; } /* Faster Glitch */
+        .card-shiny .card-img { animation: shinyFloat 1.2s ease-in-out infinite; }
+        .card-joker .card-img { animation: jokerFloat 2s ease-in-out infinite; }
+        .card-dragon .card-img { animation: dragonAppear 1.5s ease-in-out infinite; }
+        .card-phoenix .card-img { animation: phoenixFly 1.7s ease-in-out infinite; }
+        .card-common .card-img { animation: commonFloat 1.5s ease-in-out infinite; }
 
-        .card-img { font-size: 80px; margin-bottom: 15px; z-index: 2; transition: transform 0.3s; }
-        .card-name { font-weight: 900; font-size: 1rem; text-transform: uppercase; z-index: 2; text-align: center; text-shadow: 0 2px 5px #000; }
-        .mut-badge { position: absolute; top: 10px; right: 10px; padding: 4px 8px; border-radius: 4px; font-weight: 900; font-size: 0.7rem; text-transform: uppercase; z-index: 5; color: #000; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .card::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.6) 50%, transparent 70%);
+            background-size: 200% 100%;
+            animation: shinySweep 3s infinite linear;
+            z-index: 20; pointer-events: none;
+        }
 
-        @keyframes shinePass { 0%{left:-100%} 100%{left:200%} }
-        @keyframes glitchImg { 0%{transform:translate(0) skewX(0)} 20%{transform:translate(-3px,2px) skewX(5deg)} 40%{transform:translate(3px,-2px) skewX(-5deg)} 60%{transform:translate(-1px,1px)} 80%{transform:translate(2px,-1px)} }
-        @keyframes demonShake { 0%{transform:rotate(0)} 25%{transform:rotate(1deg)} 75%{transform:rotate(-1deg)} }
-        @keyframes demonFloat { 0%{transform:translateY(0)} 100%{transform:translateY(-15px) scale(1.05)} }
-        @keyframes pulseRed { 0%{box-shadow:0 0 80px #ff0000} 100%{box-shadow:0 0 150px #ff0000} }
+        .fx-demon-bg { background: radial-gradient(circle, #500 0%, #000 70%); }
+        .fx-glitch-bg { background: repeating-linear-gradient(45deg, #000, #000 10px, #001111 10px, #001111 20px); }
+        .fx-shiny-bg { background: radial-gradient(circle at 50% 50%, #fff 0%, #ccc 20%, #000 80%); }
+
+        @keyframes aestheticReveal {
+            0% { opacity: 0; transform: scale(0.4) translateY(100px) rotate(10deg); filter: blur(20px) brightness(2); }
+            40% { opacity: 1; transform: scale(1.05) translateY(-10px) rotate(-2deg); filter: blur(0px) brightness(1.2); }
+            100% { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); filter: blur(0px) brightness(1); }
+        }
+        .anim-reveal { animation: aestheticReveal 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+        .result-layer { display: none; flex-direction: row; justify-content: center; align-items: center; position:fixed; inset:0; background:rgba(0,0,0,0.97); z-index: 9200; backdrop-filter: blur(10px); }
+        
+        .card-scroller { 
+            display: flex; 
+            align-items: center; 
+            width: 100%; 
+            height: 100%;
+            overflow-x: hidden; 
+            padding: 0 50vw;
+            scroll-behavior: smooth;
+        }
+        .card-scroller.manual { overflow-x: auto; scroll-snap-type: x mandatory; pointer-events: auto; cursor: grab; }
+        .card-scroller.manual::-webkit-scrollbar { display: none; }
+        
+        .card-track { display: flex; gap: 200px; transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); } 
+        
+        .tier-text-pulse {
+            position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
+            font-size: 1.5rem; font-weight: 900; color: #fff; text-shadow: 0 0 10px currentColor;
+            white-space: nowrap; z-index: 20; animation: textPulse 0.5s infinite alternate;
+        }
+        @keyframes textPulse { 0% { transform: translateX(-50%) scale(1); opacity: 0.8; } 100% { transform: translateX(-50%) scale(1.1); opacity: 1; } }
+
+        .card-action-btn { position: absolute; bottom: 15px; width: 80%; background: #991b1b; padding: 10px; border-radius: 12px; font-size: 0.9rem; color: #fff; font-weight: bold; border: 1px solid #ff5555; cursor: pointer; text-align: center; text-transform: uppercase; box-shadow: 0 4px 0 #500; transition: 0.1s; z-index: 10; }
+        .card-action-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #500; }
+        .card-price-text { position: absolute; bottom: 15px; color: #aaa; font-size: 1rem; font-weight: bold; z-index: 10; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 10px; }
+        
+        .card-fav-star { position: absolute; top: 10px; left: 10px; font-size: 1.5rem; cursor: pointer; color: rgba(255,255,255,0.2); z-index: 10; text-shadow: 0 0 5px #000; transition: 0.2s; }
+        .card-fav-star.is-fav { color: gold; text-shadow: 0 0 10px gold; transform: scale(1.2); }
+        .mut-badge-tr { position: absolute; top: 10px; right: 10px; padding: 4px 8px; font-weight: 900; font-size: 0.8rem; border-radius: 6px; z-index: 5; box-shadow: 0 2px 5px rgba(0,0,0,0.5); text-transform: uppercase; color: #000; }
+
+        /* POPUPS */
+        #systemAlert, #confirmModal, #sellModal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 9999; }
+        .alert-box, .confirm-box, .sell-box { width: 340px; background: #111; border: 1px solid #333; padding: 40px 20px; border-radius: 20px; box-shadow: 0 0 50px rgba(0,0,0,0.8); transform: scale(0.9); animation: popIn 0.2s forwards; text-align: center; }
+        .alert-box { border-left: 4px solid var(--glitch); }
+        .confirm-box { border-top: 4px solid var(--gold); }
+        .sell-box { border-top: 4px solid var(--demon); }
+        .confirm-msg, .alert-msg { color: #ccc; margin-bottom: 35px; font-size: 0.95rem; line-height: 1.5; margin-top: 15px; }
+        .confirm-actions { display: flex; gap: 15px; justify-content: center; }
+        .btn-popup { flex: 1; padding: 15px; border-radius: 12px; font-weight: 900; cursor: pointer; border: none; font-size: 1rem; text-transform: uppercase; }
+        .btn-yes { background: var(--gold); color: #000; }
+        .btn-no { background: #222; color: #fff; border: 1px solid #444; }
+        .btn-sell-yes { background: #b91c1c; color: #fff; }
+
+        /* SHOP */
+        .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .shop-item { background: #222; padding: 15px; border-radius: 15px; text-align: center; border: 1px solid #333; cursor: pointer; transition: 0.2s; } 
+        .shop-item:hover { border-color: var(--gold); background: #2a2a2a; transform: scale(1.02); }
+        .shop-header-text { text-align: center; width: 100%; display: block; margin-bottom: 10px; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 8px; }
+
         @keyframes pulse { 0%{transform:scale(1)} 50%{transform:scale(1.05)} }
-        @keyframes shake { 0%{transform:translate(0)} 25%{transform:translate(-5px, 5px)} 75%{transform:translate(5px, -5px)} 100%{transform:translate(0)} }
-        @keyframes zoomIn { from {transform:scale(0)} to {transform:scale(1)} }
-        @keyframes particleExplode { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
-        @keyframes boostPulse { 0% { box-shadow: 0 0 30px var(--glitch), inset 0 0 10px rgba(0, 255, 255, 0.2); } 100% { box-shadow: 0 0 60px var(--glitch), inset 0 0 30px rgba(0, 255, 255, 0.5); } }
         @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes particleExplode { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
     </style>
 </head>
 <body>
     <div class="nebula-bg"><div class="stars"></div></div>
     <canvas id="particleCanvas"></canvas>
-    <canvas id="lightningCanvas"></canvas>
-    
-    <div class="dim-overlay" id="dimOverlay"></div>
+    <canvas id="lightningCanvas"></canvas> <div class="dim-overlay" id="dimOverlay"></div>
 
     <audio id="bgm1" src="https://a.top4top.io/m_3664ewg8p0.mp3" preload="auto"></audio>
     <audio id="bgm2" src="https://a.top4top.io/m_3664ewg8p0.mp3" preload="auto"></audio>
@@ -208,67 +262,182 @@
     <audio id="winAudio2" src="https://l.top4top.io/m_3663vc4970.mp3"></audio>
     <audio id="thunderAudio" src="https://a.top4top.io/m_36636a1cl0.mp3"></audio>
     <audio id="thunderAudio2" src="https://a.top4top.io/m_36636a1cl0.mp3"></audio>
-    
     <div id="systemAlert">
         <div class="alert-box">
-            <div class="alert-icon">💾</div>
-            <div class="alert-head">SYSTEM NOTIFICATION</div>
-            <div class="alert-msg" id="alertText">...</div>
-            <div class="alert-btn-group">
-                <button class="btn-alert" id="btnAlertOk" onclick="handleAlertOk()">SETUJU</button>
-                <button class="btn-alert-cancel" id="btnAlertCancel" onclick="handleAlertCancel()">BATAL</button>
+            <div style="font-size:3rem; margin-bottom:10px;">⚠️</div>
+            <div class="alert-msg" id="alertText">SYSTEM MESSAGE</div>
+            <div class="confirm-actions">
+                <button class="btn-popup btn-yes" id="btnAlertOk" onclick="handleAlertOk()">MENGERTI</button>
+                <button class="btn-popup btn-no" id="btnAlertCancel" style="display:none;" onclick="handleAlertCancel()">BATAL</button>
             </div>
         </div>
     </div>
 
     <div id="confirmModal">
         <div class="confirm-box">
-            <div class="confirm-title">KONFIRMASI</div>
+            <div style="font-size:3rem; margin-bottom:10px;">🛒</div>
+            <div style="color:var(--gold); font-weight:900; font-size:1.2rem; margin-bottom:10px;">KONFIRMASI</div>
             <div class="confirm-msg" id="confirmMsg">...</div>
             <div class="confirm-actions">
-                <button class="btn-yes" onclick="processTransaction()">YA, LANJUT</button>
-                <button class="btn-no" onclick="closeConfirm()">BATAL</button>
+                <button class="btn-popup btn-yes" onclick="processTransaction()">YA, LANJUT</button>
+                <button class="btn-popup btn-no" onclick="closeConfirm()">BATAL</button>
             </div>
         </div>
     </div>
 
     <div id="sellModal">
         <div class="sell-box">
-            <div class="sell-title">PERINGATAN!</div>
+            <div style="font-size:3rem; margin-bottom:10px;">💰</div>
+            <div style="color:var(--demon); font-weight:900; font-size:1.2rem; margin-bottom:10px;">KONFIRMASI JUAL</div>
             <div class="confirm-msg" id="sellMsg">...</div>
             <div class="confirm-actions">
-                <button class="btn-sell-yes" id="btnConfirmSell">JUAL</button>
-                <button class="btn-no" onclick="closeSellModal()">BATAL</button>
+                <button class="btn-popup btn-sell-yes" id="btnConfirmSell">JUAL SEKARANG</button>
+                <button class="btn-popup btn-no" onclick="closeSellModal()">BATAL</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="filterModal">
+        <div class="modal-box" style="max-width: 320px;">
+            <div class="modal-header">
+                <span class="modal-title">FILTER KATEGORI</span>
+                <button class="btn-close-red modal-close-abs" onclick="hideModal('filterModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <button class="btn-act" style="padding:15px; background:#111; border:1px solid var(--target-color); color:#fff; display:flex; justify-content:space-between;" onclick="applyFilter('god')">
+                        <span>DEWA & LEGEND</span> <span id="cntGod" style="color:var(--gold)">0</span>
+                    </button>
+                    <button class="btn-act" style="padding:15px; background:#111; border:1px solid var(--demon); color:#fff; display:flex; justify-content:space-between;" onclick="applyFilter('mutant')">
+                        <span>SEMUA MUTASI</span> <span id="cntMut" style="color:var(--demon)">0</span>
+                    </button>
+                    <button class="btn-act" style="padding:15px; background:#111; border:1px solid var(--phoenix); color:#fff; display:flex; justify-content:space-between;" onclick="applyFilter('high')">
+                        <span>HIGH TIER (T4+)</span> <span id="cntHigh" style="color:var(--phoenix)">0</span>
+                    </button>
+                    <button class="btn-act" style="padding:15px; background:#111; border:1px solid var(--joker); color:#fff; display:flex; justify-content:space-between;" onclick="applyFilter('mid')">
+                        <span>MID TIER (T2-T3)</span> <span id="cntMid" style="color:var(--joker)">0</span>
+                    </button>
+                    <button class="btn-act" style="padding:15px; background:#111; border:1px solid #555; color:#aaa; display:flex; justify-content:space-between;" onclick="applyFilter('trash')">
+                        <span>SAMPAH (T0-T1)</span> <span id="cntTrash">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="profileModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span class="modal-title">AGENT PROFILE</span>
+            </div>
+            <div class="modal-body" style="text-align: center;"> 
+                <div class="profile-header" style="margin-bottom: 20px;">
+                    <div style="font-size:2rem; font-weight:900; margin-bottom:5px; color:#fff;" id="pNameDisp">UNKNOWN</div>
+                    <div style="color:#888; font-size:0.9rem; display: flex; justify-content: center; gap: 15px;">
+                        <span>TOTAL: <span id="pTotalItem" style="color:#fff">0</span></span>
+                        <span>FAVORIT: <span id="pFavItem" style="color:var(--gold)">0</span></span>
+                    </div>
+                </div>
+                
+                <div id="historySection" style="display:none; animation:popIn 0.3s; margin-bottom:15px; border:1px solid #333; padding:10px; border-radius:15px; background:#000; text-align: left;">
+                    <div class="hist-stat-box" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-bottom:10px;">
+                        <div style="text-align:center;"><div style="font-size:0.6rem; color:#aaa">TOTAL KELUAR</div><div id="statOut" style="color:#f87171; font-weight:bold; font-size:0.8rem;">0</div></div>
+                        <div style="text-align:center;"><div style="font-size:0.6rem; color:#aaa">TOTAL MASUK</div><div id="statIn" style="color:#4ade80; font-weight:bold; font-size:0.8rem;">0</div></div>
+                        <div style="text-align:center;"><div style="font-size:0.6rem; color:#aaa">NET PROFIT</div><div id="statNet" style="color:#fff; font-weight:bold; font-size:0.8rem;">0</div></div>
+                    </div>
+                    <div style="font-size:0.8rem; font-weight:bold; margin-bottom:5px; color:#666; border-bottom:1px solid #333; padding-bottom:5px;">RIWAYAT TRANSAKSI</div>
+                    <div class="h-list" id="historyList" style="max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:5px;"></div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <button class="btn-act" style="padding:15px; width:100%; background:#222; border:1px solid #444;" onclick="toggleHistory()">📜 LIHAT RIWAYAT</button>
+                    <button class="btn-act" id="btnAuth" style="padding:15px; width:100%; background:#310000; border:1px solid #f00; color:#f87171;" onclick="handleAuthAction()">🔒 LOGOUT AKUN</button>
+                    <button class="btn-act" style="padding:15px; width:100%; background:#111; border:1px solid #333;" onclick="hideModal('profileModal')">KEMBALI</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="invModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span class="modal-title">TAS PENYIMPANAN</span>
+                <button class="btn-close-red modal-close-abs" onclick="hideModal('invModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="inv-tabs">
+                    <div class="tab-indicator" id="tabInd"></div>
+                    <button class="tab-btn active" id="tabAll" onclick="switchTab('all')">SEMUA</button>
+                    <button class="tab-btn" id="tabMut" onclick="switchTab('mutant')">MUTASI</button>
+                    <button class="tab-btn" id="tabFav" onclick="switchTab('fav')">FAVORIT</button>
+                </div>
+
+                <div style="padding:10px; background:#111; margin-bottom:10px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; color:#aaa; border:1px solid #222;">
+                    <span id="filterLabel">FILTER: SEMUA ITEM</span>
+                    <span id="filterCount" style="color:var(--gold); font-weight:bold; background:#000; padding:3px 8px; border-radius:4px;">0 Items</span>
+                </div>
+
+                <div class="inv-actions">
+                    <button class="btn-inv-act" id="btnQuickFav" onclick="toggleQuickFav()">⭐ FAV MANUAL</button>
+                    <button class="btn-inv-act" onclick="showModal('filterModal')">🔍 PILIH FILTER</button>
+                    <button class="btn-inv-act" style="border-color:#f00; color:#f87171; background:#310000;" onclick="sellByFilter()">💰 JUAL FILTER</button>
+                </div>
+
+                <div class="inv-grid" id="invGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="shopModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span class="modal-title">BLACK MARKET</span>
+                <button class="btn-close-red modal-close-abs" onclick="hideModal('shopModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom:20px;">
+                    <label style="font-size:0.7rem; color:#666; margin-bottom:5px; display:block; text-align:center;">REDEEM CODE (SPECIAL)</label>
+                    <input type="text" id="codeInput" placeholder="MASUKKAN KODE..." style="width:100%; padding:15px; background:#000; border:2px solid #333; color:#fff; border-radius:10px; text-align:center; font-weight:bold; letter-spacing:2px; margin-bottom:10px;">
+                    <button class="btn-act" style="width:100%; background:var(--demon); padding:12px;" onclick="redeem()">TUKAR KODE</button>
+                </div>
+                
+                <span class="shop-header-text" style="color:var(--gold);">BELI KOIN (DENGAN SALDO)</span>
+                <div class="shop-grid" id="coinGrid" style="margin-bottom:20px;"></div>
+                
+                <span class="shop-header-text" style="color:#4ade80;">TOP UP SALDO (IDR)</span>
+                <div class="shop-grid" id="cashGrid"></div>
             </div>
         </div>
     </div>
 
     <div id="startScreen">
-        <h1 style="font-size:3.5rem; margin-bottom:20px; color:var(--demon); text-shadow:0 0 30px #f00; text-transform:uppercase; text-align:center;">KAKEK SUSANOO<br><span style="font-size:1.5rem; color:#fff;">GACOR WAKK</span></h1>
-        <p style="color:#aaa; font-size:0.8rem; margin-bottom:20px">LOADING ASSETS...</p>
-        <button class="btn-start" onclick="startGame()">🔊 MULAI</button>
+        <h1 style="font-size:3.5rem; margin-bottom:20px; color:var(--demon); text-shadow:0 0 30px #f00; text-transform:uppercase; text-align:center; line-height:1.2;">KAKEK SUSANOO<br><span style="font-size:1.5rem; color:#fff;">TRUE THUNDER V12</span></h1>
+        <p style="color:#aaa; font-size:0.8rem; margin-bottom:30px; letter-spacing:2px;">ULTIMATE UPGRADE: REAL LIGHTNING</p>
+        <button class="btn-start" onclick="startGame()">🔊 MULAI GAME</button>
     </div>
 
     <div id="loginScreen">
         <div class="login-card">
-            <div class="login-title">KAKEK SUSANOO</div>
-            <div class="login-sub">SECURE LOGIN</div>
+            <div class="login-title">LOGIN SYSTEM</div>
+            <div style="font-size:0.8rem; color:var(--gold); margin-bottom:20px; letter-spacing:2px;">SECURE ACCESS</div>
+            <div class="inp-group"><input type="text" id="username" class="login-input" placeholder="USERNAME" autocomplete="off"></div>
             <div class="inp-group">
-                <input type="text" id="username" class="login-input" placeholder="AGENT NAME">
+                <input type="password" id="password" class="login-input" placeholder="PASSWORD" autocomplete="off">
+                <div class="pass-toggle" id="passToggleIcon" onclick="togglePass()">👁️</div>
             </div>
-            <button class="btn-main-login" onclick="doLogin()">LOGIN</button>
-            <div class="divider">OR ACCESS AS</div>
-            <button class="btn-guest" onclick="doGuest()">GUEST MODE</button>
+            <button class="btn-main-login" onclick="doLogin()">LOGIN / DAFTAR</button>
+            <div style="display:flex; align-items:center; gap:10px; margin:15px 0; color:#444;"><span style="flex:1;height:1px;background:#333"></span>OR<span style="flex:1;height:1px;background:#333"></span></div>
+            <button class="btn-guest" onclick="doGuest()">MASUK SEBAGAI TAMU</button>
         </div>
     </div>
 
     <div class="top-bar">
-        <div class="profile-pill" id="profilePill" onclick="handleProfileClick()">👤 USER</div>
+        <div class="profile-pill" id="profilePill" onclick="showModal('profileModal')">👤 LOADING...</div>
         <div class="stat-group">
             <div class="stat-pill" style="border-color:#4ade80">💵 <span id="uiCash" style="color:#4ade80">0</span></div>
             <div class="stat-pill" style="border-color:var(--gold)">🪙 <span id="uiCoins" style="color:var(--gold)">0</span></div>
         </div>
-        <div class="stat-pill" id="luckStatus" style="display:none; color:var(--demon); border-color:var(--demon); background:#300; box-shadow:0 0 20px var(--demon);">😈 POTION</div>
+        <div class="stat-pill" id="luckStatus" style="display:none; color:var(--demon); border-color:var(--demon); background:#300; box-shadow:0 0 10px var(--demon);">😈 POTION</div>
         <button class="btn-icon" onclick="showModal('shopModal')">🛒</button>
         <button class="btn-icon" onclick="openInv('all')">🎒</button>
     </div>
@@ -290,221 +459,123 @@
         </div>
     </div>
 
-    <div class="modal" id="shopModal" style="display:none;">
-        <div class="modal-box">
-            <div style="position: relative; text-align: center; margin-bottom: 15px;">
-                <h3 style="margin:0;">SHOP</h3>
-                <button onclick="hideModal('shopModal')" class="btn-icon" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%);">×</button>
-            </div>
-            <div class="modal-body">
-                <input type="text" id="codeInput" placeholder="KODE REDEEM" style="width:100%; padding:12px; background:#000; border:2px solid #333; color:#fff; margin-bottom:15px; border-radius:10px;">
-                <button class="btn-act" style="width:100%; background:var(--demon); padding:12px; margin-bottom:25px;" onclick="redeem()">TUKAR KODE</button>
-                <h4 style="color:var(--gold); margin-bottom:10px;">BELI KOIN (Pakai Saldo)</h4>
-                <div class="shop-grid" id="coinGrid"></div>
-                <h4 style="color:#4ade80; margin-bottom:10px;">TOP UP SALDO</h4>
-                <div class="shop-grid" id="cashGrid"></div>
+    <div id="jackpotPopup" onclick="closeJackpot()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); flex-direction:column; align-items:center; justify-content:center;">
+        <div class="jackpot-text" id="jackpotTitle" style="font-size:2.5rem; font-weight:900; text-align:center; margin-bottom:50px; z-index:20; text-shadow: 0 0 20px #fff; animation: pulse 0.5s infinite; text-transform:uppercase;">GOD MODE!</div>
+        <div id="jackpotCont" style="transform: scale(1.3); position:relative;"></div>
+        <div style="margin-top:80px; color:#fff; font-size:1rem; opacity:0.8; animation:pulse 0.5s infinite; z-index:20;">TAP LAYAR UNTUK TUTUP</div>
+    </div>
+    
+    <div class="result-layer" id="resultLayer">
+        <div class="card-scroller" id="cardScroller">
+            <div class="card-track" id="cardTrack">
             </div>
         </div>
+        <button class="btn-act btn-multi" style="position: absolute; bottom: 50px; width:200px; font-size:1.2rem; box-shadow:0 0 20px var(--joker); z-index: 9300;" onclick="closeResult()">AMBIL SEMUA</button>
     </div>
 
-    <div class="modal" id="invModal" style="display:none;">
-        <div class="modal-box">
-            <div style="position: relative; text-align: center; margin-bottom: 15px;">
-                <h3 style="margin:0;">TAS</h3>
-                <button onclick="hideModal('invModal')" class="btn-icon" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%);">×</button>
-            </div>
-            <div class="modal-body">
-                <div style="display:flex; gap:10px; margin-bottom:15px;">
-                    <button class="btn-act" style="flex:1; background:#333; padding:10px;" onclick="openInv('all')">SEMUA</button>
-                    <button class="btn-act" style="flex:1; background:var(--demon); padding:10px;" onclick="openInv('mutant')">MUTASI</button>
-                </div>
-                <button class="btn-act" style="width:100%; background:#800; padding:12px; margin-bottom:20px; border:2px solid #f00;" onclick="sellTrash()">JUAL SEMUA SAMPAH</button>
-                <div class="inv-grid" id="invGrid"></div>
-            </div>
-        </div>
+    <div id="previewOverlay" onclick="closePreview()">
+        <div id="previewContent" onclick="event.stopPropagation()" style="position:relative;"></div>
+        <div style="margin-top:40px; color:#666; font-size:0.8rem;">TAP DI LUAR KARTU UNTUK TUTUP</div>
     </div>
 
-    <div id="jackpotPopup" onclick="closeJackpot()"><div class="jackpot-text" id="jackpotTitle">GOD MODE!</div><div id="jackpotCont"></div><div style="margin-top:50px; color:#fff; font-size:1rem; opacity:0.8; animation:pulse 0.5s infinite;">TAP ANYWHERE TO CLAIM</div></div>
-    <div class="result-layer" id="resultLayer"><div class="card-scroller" id="cardScroller"><div class="card-track" id="cardTrack"></div></div><button class="btn-act btn-multi" style="width:200px; margin-top:30px; font-size:1.2rem; box-shadow:0 0 20px var(--joker);" onclick="closeResult()">AMBIL ITEM</button></div>
-    <div id="previewOverlay" onclick="closePreview()"><div id="previewContent" onclick="event.stopPropagation()"><div id="previewCont"></div><div id="sellActions" style="margin-top:20px; display:flex; justify-content:center;"></div></div><div style="margin-top:30px; color:#888; font-size:0.8rem;">TAP BACKGROUND TO CLOSE</div></div>
     <script>
-        // ===== BAGIAN 2: DATA & VISUAL ENGINE (DARK AURA MAX) =====
+        // ===== BAGIAN 3: DATA, AUDIO & VISUAL SETUP =====
         
-        // --- DATA ---
+        // --- DATA ITEM (Updated Colors: Phoenix, Dragon, Joker) ---
         const ITEMS = [
-            { id: 1, name: "TONGKAT PATAH", tier: 0, baseVal: 5, emoji: "🪄", color: "#555", weight: 4000 },
-            { id: 2, name: "ABU KUTUKAN", tier: 0, baseVal: 5, emoji: "🌫️", color: "#555", weight: 4000 },
-            { id: 3, name: "PEDANG BESI", tier: 1, baseVal: 50, emoji: "⚔️", color: "#a0a0a0", weight: 2000 },
-            { id: 4, name: "JUBAH BAYANGAN", tier: 1, baseVal: 50, emoji: "🧥", color: "#a0a0a0", weight: 2000 },
-            { id: 5, name: "KRISTAL ES", tier: 2, baseVal: 1000, emoji: "❄️", color: "#a5f2f3", weight: 1000 }, 
-            { id: 6, name: "TULANG KUNO", tier: 2, baseVal: 1500, emoji: "🩻", color: "#e5e5e5", weight: 1000 },
-            { id: 7, name: "TOPI PENYIHIR", tier: 3, baseVal: 3000, emoji: "🧙‍♀️", color: "#d946ef", weight: 300 },
-            { id: 8, name: "ORB DARKNESS", tier: 3, baseVal: 4000, emoji: "🔮", color: "#3b82f6", weight: 300 },
-            { id: 9, name: "PHOENIX API", tier: 4, baseVal: 50000, emoji: "🐦‍🔥", color: "#ff8c00", weight: 80 },
-            { id: 10, name: "DRAGON", tier: 5, baseVal: 1000000, emoji: "🐉", color: "#00ff00", weight: 10 },
-            { id: 11, name: "THE JOKER", tier: 6, baseVal: 5000000, emoji: "🃏", color: "#a855f7", weight: 1 }
+            { id: 1, name: "TONGKAT PATAH", tier: 0, baseVal: 50, emoji: "🪄", color: "#555", weight: 4000 },
+            { id: 2, name: "ABU KUTUKAN", tier: 0, baseVal: 50, emoji: "🌫️", color: "#555", weight: 4000 },
+            { id: 3, name: "PEDANG BESI", tier: 1, baseVal: 500, emoji: "⚔️", color: "#a0a0a0", weight: 2000 },
+            { id: 4, name: "JUBAH BAYANGAN", tier: 1, baseVal: 500, emoji: "🧥", color: "#a0a0a0", weight: 2000 },
+            { id: 5, name: "KRISTAL ES", tier: 2, baseVal: 2000, emoji: "❄️", color: "#a5f2f3", weight: 1000 }, 
+            { id: 6, name: "TULANG KUNO", tier: 2, baseVal: 2500, emoji: "🩻", color: "#e5e5e5", weight: 1000 },
+            { id: 7, name: "TOPI PENYIHIR", tier: 3, baseVal: 10000, emoji: "🧙‍♀️", color: "#d946ef", weight: 300 },
+            { id: 8, name: "ORB DARKNESS", tier: 3, baseVal: 15000, emoji: "🔮", color: "#3b82f6", weight: 300 },
+            // SPECIAL COLORS
+            { id: 9, name: "PHOENIX API", tier: 4, baseVal: 50000, emoji: "🐦‍🔥", color: "#FF4500", weight: 80 }, // Oren Merah
+            { id: 10, name: "DRAGON", tier: 5, baseVal: 500000, emoji: "🐉", color: "#006400", weight: 10 },    // Hijau Gelap
+            { id: 11, name: "THE JOKER", tier: 6, baseVal: 2500000, emoji: "🃏", color: "#4b0082", weight: 1 }    // Ungu Gelap
         ];
 
-        let state = { user: "", isGuest: false, cash: 0, coins: 1000, items: [] };
-        let temp = { spinning: false, boost: false, luck: false, muted: false, pendingTx: null, alertCallback: null };
-        let actx = null;
-        let masterGain = null;
+        // --- GLOBAL STATE ---
+        let state = { 
+            user: "", pass: "", isGuest: false, cash: 0, coins: 5000, items: [], 
+            history: [], totalIn: 0, totalOut: 0 
+        };
+        
+        let temp = { spinning: false, boost: false, luckExpiry: 0, pendingTx: null, alertCallback: null, filterType: 'all' };
         let sellCallback = null;
 
-        const pCanvas = document.getElementById('particleCanvas');
-        const lCanvas = document.getElementById('lightningCanvas');
-        const pCtx = pCanvas.getContext('2d');
-        const lCtx = lCanvas.getContext('2d');
-        
-        let particles = []; 
-        let sparks = []; 
-        let activeBolts = []; 
-
-        function resizeCanvas() { pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight; lCanvas.width = window.innerWidth; lCanvas.height = window.innerHeight; }
-        window.onresize = resizeCanvas;
-
-        // --- VISUAL CLASSES ---
-        class Particle {
-            constructor() { this.reset(); this.y = Math.random() * pCanvas.height; }
-            reset() { this.x = Math.random() * pCanvas.width; this.y = pCanvas.height + 10; this.speed = Math.random() * 0.5 + 0.2; this.size = Math.random() * 2; this.opacity = Math.random() * 0.5; }
-            update() { this.y -= this.speed; if(this.y < -10) this.reset(); }
-            draw() { pCtx.fillStyle = `rgba(255,255,255,${this.opacity})`; pCtx.beginPath(); pCtx.arc(this.x, this.y, this.size, 0, Math.PI*2); pCtx.fill(); }
-        }
-
-        class RingSpark {
-            constructor(x, y, color) {
-                this.x = x; this.y = y; this.color = color;
-                this.life = 1.0;
-                this.radius = 10;
-                this.maxRadius = 130;
-                this.decay = 0.04;
-            }
-            update() { this.life -= this.decay; this.radius += (this.maxRadius - this.radius) * 0.2; }
-            draw() {
-                lCtx.save();
-                lCtx.beginPath();
-                lCtx.strokeStyle = this.color;
-                lCtx.lineWidth = 4 * this.life;
-                lCtx.shadowBlur = 15;
-                lCtx.shadowColor = this.color;
-                lCtx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
-                lCtx.stroke();
-                lCtx.restore();
-            }
-        }
-
-        class Smoke {
-            constructor(x, y) {
-                this.x = x + (Math.random()-0.5)*30; this.y = y + (Math.random()-0.5)*30;
-                this.size = Math.random() * 10 + 10; this.life = 1.0; this.decay = 0.02;
-                this.vx = (Math.random()-0.5) * 1.5; this.vy = -1 - Math.random(); 
-            }
-            update() { this.x += this.vx; this.y += this.vy; this.life -= this.decay; this.size += 0.2; }
-            draw() {
-                lCtx.fillStyle = `rgba(100, 100, 100, ${this.life * 0.4})`;
-                lCtx.beginPath(); lCtx.arc(this.x, this.y, this.size, 0, Math.PI*2); lCtx.fill();
-            }
-        }
-
-        class ElectricShard {
-            constructor(x, y, color) {
-                this.x = x; this.y = y; this.color = color;
-                const angle = Math.random() * Math.PI * 2; const speed = Math.random() * 15 + 5;
-                this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
-                this.life = 1.0; this.decay = 0.07; this.length = Math.random() * 30 + 10; this.angle = angle;
-            }
-            update() { this.x += this.vx; this.y += this.vy; this.vx *= 0.85; this.vy *= 0.85; this.life -= this.decay; }
-            draw() {
-                lCtx.save(); lCtx.strokeStyle = this.color; lCtx.lineWidth = 2; lCtx.shadowBlur = 10; lCtx.shadowColor = this.color; lCtx.globalAlpha = this.life;
-                lCtx.beginPath(); lCtx.moveTo(this.x, this.y); lCtx.lineTo(this.x - Math.cos(this.angle)*this.length, this.y - Math.sin(this.angle)*this.length); lCtx.stroke(); lCtx.restore();
-            }
-        }
-
-        class LightningBolt {
-            constructor(startX, startY, targetX, targetY, color, intensity) {
-                this.sx = startX; this.sy = startY; this.tx = targetX; this.ty = targetY;
-                this.color = color; this.intensity = intensity; this.life = 1.0; this.decay = 0.08; this.strands = [];
-                for(let i=0; i<7; i++) {
-                    this.strands.push({ offsetX: (Math.random() - 0.5) * 12, offsetY: (Math.random() - 0.5) * 12, width: (i===0) ? 3 : 1.5, isCore: (i===0) });
-                }
-            }
-            update() { this.life -= this.decay; }
-            draw(ctx) {
-                if(this.life <= 0) return;
-                ctx.fillStyle = this.color; ctx.globalAlpha = this.life * 0.5; ctx.shadowBlur = 40; ctx.shadowColor = this.color;
-                ctx.beginPath(); ctx.arc(this.tx, this.ty, this.intensity * 4 * this.life, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1.0;
-                this.strands.forEach(strand => {
-                    ctx.beginPath(); ctx.moveTo(this.sx + strand.offsetX, this.sy + strand.offsetY);
-                    if(strand.isCore) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = strand.width; ctx.shadowBlur = 25; ctx.shadowColor = this.color; } 
-                    else { ctx.strokeStyle = this.color; ctx.lineWidth = strand.width; ctx.shadowBlur = 10; ctx.shadowColor = this.color; }
-                    drawJaggedLine(ctx, this.sx + strand.offsetX, this.sy + strand.offsetY, this.tx, this.ty, 200); ctx.stroke();
-                });
-            }
-        }
-
-        function drawJaggedLine(ctx, x1, y1, x2, y2, displacement) {
-            if (displacement < 5) { ctx.lineTo(x2, y2); return; }
-            const midX = (x1 + x2) / 2; const midY = (y1 + y2) / 2;
-            const offsetX = (Math.random() - 0.5) * displacement; const offsetY = (Math.random() - 0.5) * displacement;
-            drawJaggedLine(ctx, x1, y1, midX + offsetX, midY + offsetY, displacement / 1.8);
-            drawJaggedLine(ctx, midX + offsetX, midY + offsetY, x2, y2, displacement / 1.8);
-        }
-
-        function initParticles() { resizeCanvas(); for(let i=0; i<50; i++) particles.push(new Particle()); animateVisuals(); }
-        
-        function animateVisuals() { 
-            pCtx.clearRect(0,0,pCanvas.width, pCanvas.height); lCtx.clearRect(0,0,lCanvas.width, lCanvas.height); 
-            particles.forEach(p=>{p.update(); p.draw();}); 
-            sparks = sparks.filter(s => s.life > 0); sparks.forEach(s => { s.update(); s.draw(); });
-            activeBolts = activeBolts.filter(b => b.life > 0); activeBolts.forEach(b => { b.update(); b.draw(lCtx); });
-            requestAnimationFrame(animateVisuals); 
-        }
-
-        // --- TRIGGER FUNCTION: TUNNEL DARK AURA FIX ---
-        function triggerTargetedLightning(reelIndex, color, intensity, type, tier, is4Way) {
-            playSound('thunder');
-            
-            // 1. AURA MESIN (TETAP ADA)
-            const machine = document.getElementById('machineBody');
-            machine.style.setProperty('--aura-color', color); 
-            machine.classList.add('aura-active'); 
-            setTimeout(() => { machine.classList.remove('aura-active'); }, 2000);
-
-            // 2. DIM OVERLAY (TUNNEL EFFECT - FIX)
-            const dim = document.getElementById('dimOverlay');
-            const reel = document.getElementById(`reel${reelIndex}`);
-            const rect = reel.getBoundingClientRect();
-            
-            // Mencari titik tengah reel yang menang
-            const targetX = rect.left + (rect.width / 2);
-            const targetY = rect.top + (rect.height / 2);
-
-            // LOGIKA GRADIENT: Transparan di tengah (15%), lalu Hitam Pekat di sisa layar.
-            // Tidak ada warna di overlay ini, hanya hitam dan transparan. Warna datang dari efek Petir.
-            dim.style.background = `radial-gradient(circle at ${targetX}px ${targetY}px, transparent 15%, rgba(0,0,0,0.95) 30%, #000 100%)`;
-            
-            dim.classList.add('active'); 
-            
-            // Efek berkedip cepat lalu hilang
-            setTimeout(() => { dim.classList.remove('active'); }, 250); 
-
-            // 3. SPAWN VISUALS (Petir muncul DI ATAS kegelapan)
-            sparks.push(new RingSpark(targetX, targetY, color));
-            for(let i=0; i<12; i++) sparks.push(new ElectricShard(targetX, targetY, color));
-            for(let i=0; i<8; i++) sparks.push(new Smoke(targetX, targetY));
-
-            let sources = is4Way ? 
-                [{x:0,y:0}, {x:window.innerWidth,y:0}, {x:0,y:window.innerHeight}, {x:window.innerWidth,y:window.innerHeight}] : 
-                [{x:window.innerWidth/2, y:-100}];
-            
-            sources.forEach(src => {
-                activeBolts.push(new LightningBolt(src.x, src.y, targetX, targetY, color, intensity));
-            });
-        }
-
-        // --- AUDIO ENGINE (VOLUME FIX) ---
-        let winTimeout = null; 
+        // --- AUDIO ENGINE ---
+        let actx = null;
+        let masterGain = null;
         const BASE_BGM_VOL = 0.6; 
+        let currentBGM = 1; 
+        const bgm1 = document.getElementById('bgm1'); const bgm2 = document.getElementById('bgm2'); 
+        const SWAP_TIME = 96.0; let isSwapping = false;
+
+        function playSound(type, param) {
+            if(actx && actx.state==='suspended') actx.resume();
+
+            if (type === 'win') { 
+                // Logic StopWinSound dipindah ke runSlotAnimation agar tidak terputus saat roll
+                const el = document.getElementById('winAudio'); const el2 = document.getElementById('winAudio2'); 
+                el.volume = 0.9; el2.volume = 0.9; 
+                el.play().catch(e=>{}); el2.play().catch(e=>{}); 
+                return; 
+            }
+            if (type === 'thunder') { 
+                const el = document.getElementById('thunderAudio'); const el2 = document.getElementById('thunderAudio2'); 
+                el.currentTime = 0; el2.currentTime = 0; el.volume = 1.0; 
+                el.play().catch(e=>{}); el2.play().catch(e=>{}); return; 
+            }
+            if (type === 'mut' && param === 3) {
+                const el = document.getElementById('demonAudio'); el.currentTime = 0; el.volume = 1.0; el.play().catch(e=>{}); return; 
+            }
+
+            if(!actx) return; const t = actx.currentTime;
+            
+            if (type === 'reelStop') { 
+                const o = actx.createOscillator(); const g = actx.createGain(); 
+                o.connect(g); g.connect(masterGain); o.type = 'triangle'; 
+                o.frequency.setValueAtTime(200, t); o.frequency.exponentialRampToValueAtTime(50, t+0.15); 
+                g.gain.setValueAtTime(0.8, t); g.gain.exponentialRampToValueAtTime(0.01, t+0.15); 
+                o.start(); o.stop(t+0.15); 
+            }
+            else if (type === 'spin') { 
+                const o = actx.createOscillator(); const g = actx.createGain(); 
+                o.connect(g); g.connect(masterGain); o.type = 'sine'; 
+                o.frequency.setValueAtTime(200, t); o.frequency.linearRampToValueAtTime(600, t+0.1); 
+                g.gain.setValueAtTime(0.4, t); g.gain.exponentialRampToValueAtTime(0.01, t+0.1); 
+                o.start(); o.stop(t+0.1); 
+            }
+            else if (type === 'boost') { 
+                const o = actx.createOscillator(); const g = actx.createGain(); 
+                o.connect(g); g.connect(masterGain); o.type = 'sawtooth'; 
+                o.frequency.setValueAtTime(220, t); o.frequency.linearRampToValueAtTime(880, t+0.1); 
+                g.gain.setValueAtTime(0.4, t); g.gain.linearRampToValueAtTime(0, t+0.1); 
+                o.start(); o.stop(t+0.1); 
+            }
+            else if (type === 'mut') { 
+                const o = actx.createOscillator(); const g = actx.createGain(); 
+                o.connect(g); g.connect(masterGain); 
+                if (param === 2) { // Glitch
+                    o.type = 'square'; o.frequency.setValueAtTime(300, t); 
+                    g.gain.setValueAtTime(0.6, t); g.gain.exponentialRampToValueAtTime(0.01, t+2.0); 
+                    o.frequency.linearRampToValueAtTime(100, t+0.1); o.start(); o.stop(t+3.0); 
+                } else if (param === 1) { // Shiny
+                    o.type = 'sine'; o.frequency.setValueAtTime(400, t); 
+                    g.gain.setValueAtTime(0.7, t); g.gain.exponentialRampToValueAtTime(0.01, t+2.0); 
+                    o.start(); o.stop(t+3.0); 
+                } 
+            } 
+            else if (type === 'tier') { 
+                if (param <= 1) playChord([261.6], 'sine', 0.2); 
+                else if (param === 2) playChord([261.6, 329.6], 'sine', 0.4); 
+                else if (param === 3) playChord([261.6, 329.6, 392.0], 'triangle', 0.6); 
+                else if (param >= 4) { let notes = [261.6, 329.6, 392.0, 523.2]; notes.forEach((freq, i) => { setTimeout(() => playChord([freq], 'triangle', 0.5), i * 150); }); } 
+            }
+        }
 
         function playChord(freqs, type, dur) { 
             if(!actx) return; const t = actx.currentTime; 
@@ -516,100 +587,12 @@
             }); 
         }
 
-        function playSound(type, param) {
-            if(temp.muted) return; 
-            if(actx && actx.state==='suspended') actx.resume();
-
-            // --- MP3 SOUNDS ---
-            if (type === 'win') { 
-                const el = document.getElementById('winAudio'); const el2 = document.getElementById('winAudio2'); 
-                if (winTimeout) clearTimeout(winTimeout); 
-                el.currentTime = 0; el2.currentTime = 0; 
-                el.volume = 0.9; el2.volume = 0.9; // Normal Volume (No Distort)
-                el.play().catch(e=>{}); el2.play().catch(e=>{}); 
-                
-                const tier = param.tier; const mut = param.mut; 
-                const isHighEnd = (tier >= 4 || (mut >= 1 && tier >= 3)); 
-                if (!isHighEnd) { 
-                    winTimeout = setTimeout(() => { 
-                        let vol = 0.9; let fade = setInterval(() => { vol -= 0.1; if (vol <= 0) { clearInterval(fade); el.pause(); el2.pause(); } else { el.volume = vol; el2.volume = vol; } }, 50); 
-                    }, 2500); 
-                } return; 
-            }
-            if (type === 'thunder') { 
-                const el = document.getElementById('thunderAudio'); const el2 = document.getElementById('thunderAudio2'); 
-                el.currentTime = 0; el2.currentTime = 0; el.volume = 1.0; 
-                el.play().catch(e=>{}); el2.play().catch(e=>{}); return; 
-            }
-            if (type === 'mut' && param === 3) {
-                const el = document.getElementById('demonAudio'); el.currentTime = 0; el.volume = 1.0; el.play().catch(e=>{}); return; 
-            }
-
-            // --- OSCILLATOR SOUNDS ---
-            if(!actx) return; const t = actx.currentTime;
-
-            if (type === 'residue') {
-                const o = actx.createOscillator(); const g = actx.createGain();
-                o.type = 'sawtooth'; o.frequency.setValueAtTime(100, t); o.frequency.linearRampToValueAtTime(50, t+0.5);
-                g.gain.setValueAtTime(0.2, t); g.gain.exponentialRampToValueAtTime(0.01, t+0.5);
-                o.connect(g); g.connect(masterGain); o.start(); o.stop(t+0.5); return;
-            }
-
-            if (type === 'reelStop') { 
-                const o = actx.createOscillator(); const g = actx.createGain(); 
-                o.connect(g); g.connect(masterGain); o.type = 'triangle'; 
-                o.frequency.setValueAtTime(200, actx.currentTime); o.frequency.exponentialRampToValueAtTime(50, actx.currentTime + 0.15); 
-                g.gain.setValueAtTime(0.8, actx.currentTime); // Standard
-                g.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 0.15); 
-                o.start(); o.stop(actx.currentTime + 0.15); return; 
-            }
-            
-            // SPIN: DIKEMBALIKAN KE VOLUME NORMAL (LOW)
-            if (type === 'spin') { 
-                const o = actx.createOscillator(); const g = actx.createGain(); 
-                o.connect(g); g.connect(masterGain); o.type = 'sine'; 
-                o.frequency.setValueAtTime(200, t); o.frequency.linearRampToValueAtTime(600, t+0.1); 
-                g.gain.setValueAtTime(0.4, t); // REVERTED TO LOW
-                g.gain.exponentialRampToValueAtTime(0.01, t+0.1); 
-                o.start(); o.stop(t+0.1); 
-            }
-            // BOOST
-            else if (type === 'boost') { 
-                const o = actx.createOscillator(); const g = actx.createGain(); 
-                o.connect(g); g.connect(masterGain); o.type = 'sawtooth'; 
-                o.frequency.setValueAtTime(220, t); o.frequency.linearRampToValueAtTime(880, t+0.1); 
-                g.gain.setValueAtTime(0.4, t); g.gain.linearRampToValueAtTime(0, t+0.1); 
-                o.start(); o.stop(t+0.1); 
-            }
-            // MUTATION FX: BOOSTED MODERATELY
-            else if (type === 'mut') { 
-                const o = actx.createOscillator(); const g = actx.createGain(); 
-                o.connect(g); g.connect(masterGain); 
-                if (param === 2) { 
-                    o.type = 'square'; o.frequency.setValueAtTime(300, t); 
-                    g.gain.setValueAtTime(0.6, t); // Boosted Dikit
-                    g.gain.exponentialRampToValueAtTime(0.01, t+2.0); 
-                    o.frequency.linearRampToValueAtTime(100, t+0.1); o.frequency.linearRampToValueAtTime(100, t+0.2); 
-                    o.start(); o.stop(t+3.0); 
-                } else if (param === 1) { 
-                    o.type = 'sine'; o.frequency.setValueAtTime(400, t); 
-                    g.gain.setValueAtTime(0.7, t); // Boosted Dikit
-                    g.gain.exponentialRampToValueAtTime(0.01, t+2.0); 
-                    o.start(); o.stop(t+3.0); 
-                } 
-            } 
-            // TIER SOUNDS
-            else if (type === 'tier') { 
-                if (param <= 1) playChord([261.6], 'sine', 0.2); 
-                else if (param === 2) playChord([261.6, 329.6], 'sine', 0.4); 
-                else if (param === 3) playChord([261.6, 329.6, 392.0], 'triangle', 0.6); 
-                else if (param >= 4) { let notes = [261.6, 329.6, 392.0, 523.2]; notes.forEach((freq, i) => { setTimeout(() => playChord([freq], 'triangle', 0.5), i * 150); }); } 
-            }
+        function stopWinSound() {
+            const el = document.getElementById('winAudio'); 
+            const el2 = document.getElementById('winAudio2');
+            el.pause(); el.currentTime = 0;
+            el2.pause(); el2.currentTime = 0;
         }
-        // --- BGM: PING PONG SYSTEM ---
-        let currentBGM = 1; 
-        const bgm1 = document.getElementById('bgm1'); const bgm2 = document.getElementById('bgm2'); 
-        const SWAP_TIME = 96.0; let isSwapping = false;
 
         function startPingPong() { 
             bgm1.volume = BASE_BGM_VOL; bgm2.volume = BASE_BGM_VOL; bgm2.muted = true; 
@@ -630,50 +613,428 @@
             if (active.paused && !isSwapping && active.currentTime > 0 && active.currentTime < SWAP_TIME) { active.play().catch(()=>{}); } 
         }
 
-        function ensureBGM() { let active = currentBGM === 1 ? bgm1 : bgm2; if(active.paused) active.play().catch(()=>{}); }
+        // --- CANVAS SETUP ---
+        const pCanvas = document.getElementById('particleCanvas');
+        const lCanvas = document.getElementById('lightningCanvas');
+        const pCtx = pCanvas.getContext('2d');
+        const lCtx = lCanvas.getContext('2d');
 
-        // --- GAME CONTROL ---
+        function resizeCanvas() { 
+            pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight; 
+            lCanvas.width = window.innerWidth; lCanvas.height = window.innerHeight; 
+        }
+        window.onresize = resizeCanvas;
+        // --- VISUAL CLASSES ---
+
+        // 1. BACKGROUND PARTICLE
+        let particles = []; let sparks = []; let activeBolts = [];
+
+        class Particle {
+            constructor() { this.reset(); this.y = Math.random() * pCanvas.height; }
+            reset() { 
+                this.x = Math.random() * pCanvas.width; 
+                this.y = pCanvas.height + 10; 
+                this.speed = Math.random() * 0.5 + 0.2; 
+                this.size = Math.random() * 2; 
+                this.opacity = Math.random() * 0.5; 
+            }
+            update() { this.y -= this.speed; if(this.y < -10) this.reset(); }
+            draw() { 
+                pCtx.fillStyle = `rgba(255,255,255,${this.opacity})`; 
+                pCtx.beginPath(); pCtx.arc(this.x, this.y, this.size, 0, Math.PI*2); pCtx.fill(); 
+            }
+        }
+
+        // 2. JAGGED ELECTRIC RING (UPDATED: MORE RANDOM/IRREGULAR)
+        class JaggedElectricRing {
+            constructor(x, y, color, delay) {
+                this.x = x; this.y = y; this.color = color;
+                this.life = 1.0; 
+                this.maxLife = 1.0;
+                this.radius = 10; 
+                this.maxRadius = 200; // UPDATED: Reduce max size so it doesn't get too big
+                this.decay = 0.03; 
+                this.points = 120;
+                this.delay = delay; 
+            }
+            update() { 
+                if(this.delay > 0) { this.delay--; return; }
+                this.life -= this.decay; 
+                this.radius += (this.maxRadius - this.radius) * 0.15; 
+            }
+            draw() {
+                if(this.life <= 0 || this.delay > 0) return;
+                lCtx.save();
+                lCtx.beginPath();
+                lCtx.strokeStyle = this.color;
+                lCtx.lineWidth = 3 * this.life; 
+                lCtx.shadowBlur = 20 * this.life;
+                lCtx.shadowColor = this.color;
+                
+                if(this.life < 0.5) {
+                    const dashLen = 20 * (1 - this.life);
+                    lCtx.setLineDash([dashLen, dashLen * 0.5]); 
+                }
+
+                for (let i = 0; i <= this.points; i++) {
+                    const angle = (i / this.points) * Math.PI * 2;
+                    // UPDATED: MORE RANDOM OFFSET
+                    const noise = (Math.random() - 0.5) * 60 * this.life; 
+                    const wobble = Math.sin(i * 0.5) * 20 * this.life; // Low freq noise
+                    const r = this.radius + noise + wobble;
+                    const px = this.x + Math.cos(angle) * r;
+                    const py = this.y + Math.sin(angle) * r;
+                    if (i === 0) lCtx.moveTo(px, py); else lCtx.lineTo(px, py);
+                }
+                lCtx.closePath(); lCtx.stroke(); lCtx.restore();
+            }
+        }
+
+        // 3. SMOKE & SHARDS
+        class Smoke {
+            constructor(x, y) {
+                this.x = x + (Math.random()-0.5)*30; this.y = y + (Math.random()-0.5)*30;
+                this.size = Math.random() * 10 + 10; this.life = 1.0; this.decay = 0.03;
+                this.vx = (Math.random()-0.5) * 1.5; this.vy = -1 - Math.random(); 
+            }
+            update() { this.x += this.vx; this.y += this.vy; this.life -= this.decay; this.size += 0.2; }
+            draw() {
+                lCtx.fillStyle = `rgba(150, 150, 150, ${this.life * 0.5})`;
+                lCtx.beginPath(); lCtx.arc(this.x, this.y, this.size, 0, Math.PI*2); lCtx.fill();
+            }
+        }
+        
+        class ElectricShard {
+            constructor(x, y, color) {
+                this.x = x; this.y = y; this.color = color;
+                const angle = Math.random() * Math.PI * 2; const speed = Math.random() * 20 + 10;
+                this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
+                this.life = 1.0; this.decay = 0.05; this.length = Math.random() * 40 + 20; this.angle = angle;
+            }
+            update() { this.x += this.vx; this.y += this.vy; this.vx *= 0.85; this.vy *= 0.85; this.life -= this.decay; }
+            draw() {
+                lCtx.save(); lCtx.strokeStyle = "#fff"; lCtx.lineWidth = 3; lCtx.shadowBlur = 15; lCtx.shadowColor = this.color; lCtx.globalAlpha = this.life;
+                lCtx.beginPath(); lCtx.moveTo(this.x, this.y); lCtx.lineTo(this.x - Math.cos(this.angle)*this.length, this.y - Math.sin(this.angle)*this.length); lCtx.stroke(); lCtx.restore();
+            }
+        }
+
+        // 4. ULTIMATE LIGHTNING BOLT - UPDATED: CORNER SOURCE & SMALLER SIZE
+        class UltimateLightningBolt {
+            constructor(tx, ty, coreColor, glowColor, intensity, mode) {
+                this.tx = tx; this.ty = ty; // Target
+                this.coreColor = coreColor; 
+                this.glowColor = glowColor;
+                this.intensity = intensity;
+                this.life = 1.0;
+                this.decay = 0.05; // UPDATED: Slightly slower decay for impact
+                this.mode = mode; 
+                this.bolts = [];
+
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+
+                // CONFIG HELAIAN (STRANDS) - UPDATED CORNERS & SIZE
+                if (this.mode === '4way') {
+                    // 4 ARAH (POJOK)
+                    const sources = [
+                        {x: -100, y: -100},   // Kiri Atas
+                        {x: w+100, y: -100},  // Kanan Atas
+                        {x: -100, y: h+100},   // Kiri Bawah
+                        {x: w+100, y: h+100}   // Kanan Bawah
+                    ];
+
+                    sources.forEach(src => {
+                        // 3 HELAI BESAR (UKURAN DIPERKECIL DIKIT DARI 9 JADI 5.5)
+                        for(let i=0; i<3; i++) this.bolts.push({ 
+                            sx: src.x, sy: src.y, 
+                            width: 5.5 - (i*1.2), // Tweak size here
+                            isCore: true, 
+                            jagged: 1.0,
+                            intensity: 1.8 
+                        });
+                        // 5 HELAI KECIL
+                        for(let i=0; i<5; i++) this.bolts.push({ 
+                            sx: src.x, sy: src.y, 
+                            width: 3, 
+                            isCore: false, 
+                            jagged: 2.0, 
+                            offX: (Math.random()-0.5)*120,
+                            offY: (Math.random()-0.5)*120
+                        });
+                    });
+
+                } else {
+                    // 1 ARAH (Atas Tengah ke Bawah)
+                    const sx = w/2; const sy = -100;
+                    
+                    // 2 HELAI BESAR (UKURAN DIPERKECIL DIKIT DARI 8 JADI 5)
+                    this.bolts.push({ sx: sx, sy: sy, width: 5, isCore: true, jagged: 1.0, intensity: 1.5 });
+                    this.bolts.push({ sx: sx, sy: sy, width: 3.5, isCore: true, jagged: 1.2, intensity: 1.3 });
+                    
+                    // 3 HELAI KECIL
+                    this.bolts.push({ sx: sx, sy: sy, width: 3, isCore: false, jagged: 1.8, offX: 50 });
+                    this.bolts.push({ sx: sx, sy: sy, width: 3, isCore: false, jagged: 1.8, offX: -50 });
+                    this.bolts.push({ sx: sx, sy: sy, width: 2, isCore: false, jagged: 2.2, offX: 0 });
+                }
+            }
+
+            update() { this.life -= this.decay; }
+
+            draw(ctx) {
+                if(this.life <= 0) return;
+                
+                // Impact Glow
+                ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+                ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                
+                ctx.fillStyle = this.glowColor; 
+                ctx.globalAlpha = this.life * 0.7; 
+                ctx.shadowBlur = 120; ctx.shadowColor = this.glowColor;
+                ctx.beginPath(); ctx.arc(this.tx, this.ty, this.intensity * 12 * this.life, 0, Math.PI*2); ctx.fill(); 
+                ctx.globalAlpha = 1.0;
+
+                this.bolts.forEach(b => {
+                    ctx.beginPath();
+                    let startX = b.sx; let startY = b.sy;
+                    if(b.offX) startX += b.offX; 
+                    if(b.offY) startY += b.offY;
+
+                    ctx.moveTo(startX, startY);
+                    
+                    // Core (Putih) vs Satelit (Warna Glow)
+                    const lineColor = b.isCore ? this.coreColor : this.glowColor;
+                    const lineWidth = b.width * (this.life + 0.5) * (b.intensity || 1);
+                    const shadowBlur = b.isCore ? 80 : 40;
+                    
+                    ctx.strokeStyle = lineColor;
+                    ctx.lineWidth = lineWidth;
+                    ctx.shadowBlur = shadowBlur;
+                    ctx.shadowColor = this.glowColor;
+                    
+                    let disp = 150 * (b.jagged || 1);
+                    
+                    drawJaggedLine(ctx, startX, startY, this.tx, this.ty, disp);
+                    ctx.stroke();
+                });
+            }
+        }
+
+        // Recursive Jagged Line Function
+        function drawJaggedLine(ctx, x1, y1, x2, y2, displacement) {
+            if (displacement < 5) { ctx.lineTo(x2, y2); return; }
+            const midX = (x1 + x2) / 2; const midY = (y1 + y2) / 2;
+            const offsetX = (Math.random() - 0.5) * displacement; 
+            const offsetY = (Math.random() - 0.5) * displacement;
+            drawJaggedLine(ctx, x1, y1, midX + offsetX, midY + offsetY, displacement / 1.8);
+            drawJaggedLine(ctx, midX + offsetX, midY + offsetY, x2, y2, displacement / 1.8);
+        }
+
+        // --- ANIMATION LOOP ---
+        function initParticles() { resizeCanvas(); for(let i=0; i<60; i++) particles.push(new Particle()); animateVisuals(); }
+        
+        function animateVisuals() { 
+            pCtx.clearRect(0,0,pCanvas.width, pCanvas.height); 
+            lCtx.clearRect(0,0,lCanvas.width, lCanvas.height); 
+            
+            // Draw Background Particles
+            particles.forEach(p=>{p.update(); p.draw();}); 
+            
+            // Draw Sparks/Rings
+            sparks = sparks.filter(s => s.life > 0); 
+            sparks.forEach(s => { s.update(); s.draw(); });
+            
+            // Draw Lightning Bolts
+            activeBolts = activeBolts.filter(b => b.life > 0); 
+            activeBolts.forEach(b => { b.update(); b.draw(lCtx); });
+            
+            requestAnimationFrame(animateVisuals); 
+        }
+
+        // --- MAIN TRIGGER FUNCTION (LOGIC PENENTU PETIR) ---
+        function triggerLightning(reelId, item, isFourWay) {
+            playSound('thunder');
+            const machine = document.getElementById('machineBody');
+            
+            // Tentukan Warna & Intensitas
+            let glowColor = item.color;
+            let coreColor = "#ffffff";
+            let intensity = 4;
+            
+            // Override Warna Khusus
+            if (item.mut === 0) {
+                // Non Mutasi
+                if (item.id === 9) glowColor = "#FF4500"; // Phoenix
+                if (item.id === 10) glowColor = "#006400"; // Dragon
+                if (item.id === 11) glowColor = "#4b0082"; // Joker
+                intensity = 6;
+                
+                // Logic Strict: 1-Way Non-Mutasi -> Basic Petir (Putih/Basic Color)
+                if (!isFourWay) {
+                    glowColor = "#ffffff"; // Default Basic White untuk petir 1 jalur biasa
+                }
+            } else {
+                // Mutasi (Warna Petir Sesuai Mutasi)
+                if (item.mut === 3) { glowColor = "#ff0000"; intensity = 12; } // Demon
+                else if (item.mut === 2) { glowColor = "#00ffff"; intensity = 10; } // Glitch
+                else if (item.mut === 1) { glowColor = "#ffffff"; intensity = 8; } // Shiny
+            }
+
+            // Flash effect pada casing mesin
+            machine.style.setProperty('--target-color', glowColor); 
+            machine.classList.add('mode-win'); 
+            setTimeout(() => { machine.classList.remove('mode-win'); }, 200);
+
+            // Dim Overlay
+            const dim = document.getElementById('dimOverlay');
+            dim.style.background = "rgba(0,0,0,0.85)"; 
+            dim.classList.add('active'); 
+            setTimeout(() => { dim.classList.remove('active'); }, 200); 
+
+            // Cari Koordinat Reel
+            const el = document.getElementById('reel' + reelId);
+            if(el) {
+                const rect = el.getBoundingClientRect();
+                const tx = rect.left + (rect.width / 2);
+                const ty = rect.top + (rect.height / 2);
+                
+                const mode = isFourWay ? '4way' : '1way';
+                
+                // Spawn Petir
+                activeBolts.push(new UltimateLightningBolt(tx, ty, coreColor, glowColor, intensity, mode));
+                
+                // Spawn 3 Gelombang Ring Listrik
+                sparks.push(new JaggedElectricRing(tx, ty, glowColor, 0));  
+                sparks.push(new JaggedElectricRing(tx, ty, glowColor, 5));  
+                sparks.push(new JaggedElectricRing(tx, ty, glowColor, 10)); 
+                
+                // Efek Pecahan & Asap
+                for(let k=0; k<8; k++) sparks.push(new ElectricShard(tx, ty, glowColor));
+                for(let k=0; k<5; k++) sparks.push(new Smoke(tx, ty));
+            }
+        }
+
+        // --- GAME LOGIC & SYSTEM ---
+
         function startGame() { 
-            document.getElementById('startScreen').style.display = 'none'; document.getElementById('loginScreen').style.display = 'flex'; 
+            document.getElementById('startScreen').style.display = 'none'; 
+            document.getElementById('loginScreen').style.display = 'flex'; 
+            
             actx = new (window.AudioContext || window.webkitAudioContext)(); 
-            masterGain = actx.createGain(); masterGain.gain.value = 1.0; masterGain.connect(actx.destination); actx.resume(); 
+            masterGain = actx.createGain(); masterGain.gain.value = 1.0; 
+            masterGain.connect(actx.destination); actx.resume(); 
             initParticles(); startPingPong(); 
         }
 
+        function togglePass() {
+            const el = document.getElementById('password'); const icon = document.getElementById('passToggleIcon');
+            if (el.type === "password") { el.type = "text"; icon.innerHTML = "🚫"; } 
+            else { el.type = "password"; icon.innerHTML = "👁️"; }
+        }
+
         function doLogin() { 
-            const u = document.getElementById('username').value.trim(); 
-            if(!u) { showSystemAlert("ACCESS DENIED: USERNAME REQUIRED"); return; } 
-            state.user = u; state.isGuest = false; 
-            let foundSave = false;
-            const s = localStorage.getItem('casino_legend_v_final_' + u); 
-            if(s) { try { const p = JSON.parse(s); state.cash=p.cash||0; state.coins=p.coins||1000; state.items=p.items||[]; foundSave = true; } catch(e){} } 
-            showSystemAlert(foundSave ? `WELCOME BACK, AGENT ${u}<br>DATA LOADED` : `NEW PROFILE CREATED: ${u}`, true, () => { state.user = ""; document.getElementById('loginScreen').style.display = 'flex'; });
-            document.getElementById('loginScreen').style.display='none'; initSlots(); updateUI(); renderShop(); 
+            const u = document.getElementById('username').value.trim().toUpperCase(); 
+            const p = document.getElementById('password').value.trim();
+            if(!u) { showSystemAlert("USERNAME KOSONG"); return; }
+            if(!p) { showSystemAlert("PASSWORD KOSONG"); return; }
+
+            const raw = localStorage.getItem('god_perfect_v12_' + u);
+            let msg = "";
+            
+            if(raw) {
+                try {
+                    const data = JSON.parse(raw);
+                    if (data.pass && data.pass !== p) { showSystemAlert("PASSWORD SALAH!"); return; }
+                    state = data;
+                    if(!state.history) state.history = []; if(!state.items) state.items = [];
+                    msg = `WELCOME BACK,<br><span style="color:var(--gold); font-size:1.5rem;">AGENT ${u}</span>`;
+                } catch(e) { state.user = u; state.pass = p; state.isGuest = false; }
+            } else {
+                if (state.isGuest) {
+                    const gp = JSON.parse(JSON.stringify(state)); 
+                    state = gp; state.user = u; state.pass = p; state.isGuest = false;
+                    msg = `AKUN DIBUAT (EX-GUEST):<br><span style="color:#4ade80; font-size:1.5rem;">${u}</span>`;
+                } else {
+                    state = { user: u, pass: p, isGuest: false, cash: 0, coins: 5000, items: [], history: [], totalIn: 0, totalOut: 0 };
+                    msg = `PROFILE BARU:<br><span style="color:#4ade80; font-size:1.5rem;">${u}</span>`;
+                }
+            }
+            save(); showSystemAlert(msg, false, () => {}); 
+            document.getElementById('loginScreen').style.display='none'; hideModal('profileModal');
+            initSlots(); updateUI(); updateMachineState();
         }
 
         function doGuest() { 
-            const guestName = "GUEST_" + Math.floor(Math.random() * 9999); 
-            state.user = guestName; state.isGuest = true; 
-            document.getElementById('loginScreen').style.display='none'; initSlots(); updateUI(); renderShop(); 
-            showSystemAlert("GUEST MODE ACTIVATED<br>DATA NOT SAVED", true, () => { state.user = ""; state.isGuest = false; document.getElementById('loginScreen').style.display = 'flex'; }); 
+            state = { user: "GUEST_" + Math.floor(Math.random() * 9999), isGuest: true, cash: 0, coins: 5000, items: [], history: [], totalIn: 0, totalOut: 0 };
+            document.getElementById('loginScreen').style.display='none'; 
+            initSlots(); updateUI(); updateMachineState();
+            showSystemAlert("MODE TAMU AKTIF"); 
+        }
+
+        function save() { 
+            if(!state.isGuest && state.user) { localStorage.setItem('god_perfect_v12_' + state.user, JSON.stringify(state)); }
+        }
+
+        function updateMachineState() {
+            const m = document.getElementById('machineBody');
+            const btn = document.getElementById('btnBoost');
+            m.style.borderColor = '#444'; // Reset
+            
+            if (Date.now() < temp.luckExpiry) {
+                m.style.borderColor = varCSS('--demon'); document.getElementById('luckStatus').style.display='flex';
+            } else {
+                document.getElementById('luckStatus').style.display='none';
+                if (temp.boost) m.style.borderColor = varCSS('--glitch');
+            }
+        }
+        function varCSS(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+        setInterval(updateMachineState, 1000);
+
+        function toggleBoost() { 
+            temp.boost = !temp.boost; 
+            const btn = document.getElementById('btnBoost');
+            if(temp.boost) btn.classList.add('active'); else btn.classList.remove('active');
+            playSound('boost'); updateMachineState(); 
         }
 
         // --- RNG LOGIC ---
-        function getPrice(item, mut) { if(item.id === 11) { if(mut === 3) return 5000000; if(mut === 2) return 2000000; if(mut === 1) return 1000000; return item.baseVal; } if(item.id === 10) { if(mut === 3) return 1500000; if(mut === 2) return 500000; if(mut === 1) return 150000; return item.baseVal; } let bonus = 0; if(mut===3)bonus=30; if(mut===2)bonus=20; if(mut===1)bonus=10; return item.baseVal + bonus; }
-
         function roll() { 
             let pool = JSON.parse(JSON.stringify(ITEMS)); 
-            if(temp.luck) { pool = pool.filter(i => i.tier >= 4); pool.forEach(i => i.weight = 100); } 
-            else if(temp.boost) pool.forEach(i=>{if(i.tier>=2)i.weight*=5}); 
+            const isLuckActive = Date.now() < temp.luckExpiry;
+            
+            // Modifier Probabilitas
+            if(isLuckActive) { 
+                pool = pool.filter(i => i.tier >= 2); // Hanya Tier 2 keatas
+                pool.forEach(i => { if(i.tier >= 4) i.weight += 500; else i.weight = 50; });
+            } 
+            else if(temp.boost) { pool.forEach(i=>{ if(i.tier>=2) i.weight *= 5 }); } 
+            
+            // Gacha Item Base
             let tot=pool.reduce((a,b)=>a+b.weight,0); let r=Math.random()*tot; let it=pool[0]; 
             for(let p of pool) { if(r<p.weight){it=p;break;} r-=p.weight; } 
+            
+            // Gacha Mutasi
             let mut=0; let rm=Math.random(); 
-            if(temp.luck) { if(rm < 0.4) mut=3; else if(rm < 0.7) mut=2; else mut=1; } 
+            if(isLuckActive) { if(rm < 0.5) mut=3; else if(rm < 0.8) mut=2; else mut=1; } 
             else if(it.tier>=1) { if(rm<0.02) mut=3; else if(rm<0.08) mut=2; else if(rm<0.2) mut=1; } 
-            return {...it, mut, val: getPrice(it, mut), uid:Date.now()+Math.random()}; 
+            
+            // Valuation Logic
+            let base = it.baseVal; let isCash = (it.tier >= 4) || (it.tier === 3 && mut > 0);
+            if(it.tier===3 && mut>0) base = 25000;
+            
+            let mult = 1; if(mut===1) mult=1.5; if(mut===2) mult=3.0; if(mut===3) mult=5.0;
+            let finalVal = Math.floor(base * mult);
+            
+            // Hardcode Harga Special
+            if (isCash) {
+                if(it.id === 11) finalVal = 5000000 * mult; 
+                else if(it.id === 10) finalVal = 1000000 * mult; 
+                else if(it.id === 9) finalVal = 50000 * mult;
+            }
+
+            return { ...it, mut, val: finalVal, isCash: isCash, uid: Date.now() + Math.random(), isFav: false }; 
         }
 
-        // --- SPIN ANIMATION SYSTEM ---
+        // --- SPIN SEQUENCE ---
         const STRIP_LEN = 30; 
         function initSlots() { [1,2,3].forEach(id=>{ document.getElementById(`strip${id}`).innerHTML = generateStripHtml(); }); }
         
@@ -684,193 +1045,647 @@
                 else { const r = ITEMS[Math.floor(Math.random()*ITEMS.length)]; h += `<div class="slot-icon" style="opacity:0.4; filter:grayscale(1);">${r.emoji}</div>`; } 
             } return h; 
         }
-        
-        function resetVisuals() { 
-            document.getElementById('dimOverlay').classList.remove('active'); 
-            document.getElementById('machineBody').classList.remove('god-active'); 
-        }
 
         async function spinSequence(count) {
-            if(temp.spinning) return; resetVisuals(); 
-            const cost = (count*100) + (temp.boost?5000:0);
-            if(state.coins < cost) { showSystemAlert("INSUFFICIENT FUNDS"); return; }
-            state.coins -= cost; updateUI(); temp.spinning = true;
+            if(temp.spinning) return; 
+            const cost = (count*100) + (temp.boost ? 5000 : 0);
+            if(state.coins < cost) { showSystemAlert("KOIN TIDAK CUKUP!"); return; }
+            
+            state.coins -= cost; 
+            addToHistory('OUT', temp.boost ? `SPIN (BOOST) x${count}` : `SPIN x${count}`, cost);
+            updateUI(); 
+            
+            temp.spinning = true;
             document.getElementById('spin1').disabled = true; document.getElementById('spin5').disabled = true;
+            
             let sessionResults = [];
-            for(let i=0; i<count; i++) {
-                if(i > 0) { resetVisuals(); await new Promise(r=>setTimeout(r, 200)); } 
-                const item = roll(); sessionResults.push(item);
-                const isGod = (item.tier >= 4) || (item.mut >= 1 && item.tier >= 3);
-                await runSlotAnimation(item, isGod);
-                if(isGod) { await showJackpotPopup(item); } else { await new Promise(r=>setTimeout(r, 200)); }
+            
+            try {
+                for(let i=0; i<count; i++) {
+                    if(i > 0) { await new Promise(r=>setTimeout(r, 200)); } 
+                    
+                    const item = roll(); 
+                    state.items.push(item);
+                    sessionResults.push(item);
+                    save(); 
+                    
+                    // Logic Condition 4-Way Lightning
+                    let isFourWay = false;
+                    // Condition: Phoenix(9), Dragon(10), Joker(11) MUTASI OR NON-MUTASI
+                    if (item.id >= 9) {
+                        isFourWay = true;
+                    } 
+                    // Condition: Orb(8), Topi(7) HANYA JIKA MUTASI
+                    else if ((item.id === 7 || item.id === 8) && item.mut > 0) {
+                        isFourWay = true;
+                    }
+
+                    // Logic Win Dasar untuk Animasi Bam
+                    const isWin = (item.tier >= 3) || (item.mut > 0);
+                    
+                    // JALANKAN ANIMASI BAM BAM BAM
+                    await runSlotAnimation(item, isWin, isFourWay);
+                    
+                    // Jika 4-Way Trigger -> Tampilkan Popup Spesial
+                    if(isFourWay) { 
+                        await showJackpotPopup(item); 
+                    } 
+                }
+                
+                // Jika 5x Spin, tampilkan ringkasan akhir
+                if(count > 1) showRes(sessionResults);
+                
+            } catch (e) {
+                console.error(e);
+                showSystemAlert("ERROR TEKNIS. ITEM AMAN.");
+            } finally {
+                temp.spinning = false; 
+                document.getElementById('spin1').disabled = false; 
+                document.getElementById('spin5').disabled = false; 
+                save();
             }
-            showRes(sessionResults);
-            temp.spinning = false; document.getElementById('spin1').disabled = false; document.getElementById('spin5').disabled = false; save();
         }
 
-        function runSlotAnimation(targetItem, isGod) {
+        function runSlotAnimation(targetItem, isWin, isFourWay) {
             return new Promise(resolve => {
-                const isAlign = isGod || (targetItem.tier >= 2) || (targetItem.mut > 0);
                 [1,2,3].forEach(id=>{ 
                     let visualTarget = targetItem; 
-                    if (!isAlign && id > 1) visualTarget = ITEMS[Math.floor(Math.random() * ITEMS.length)]; 
+                    if (!isWin && id > 1) visualTarget = ITEMS[Math.floor(Math.random() * ITEMS.length)]; 
                     const s = document.getElementById(`strip${id}`); 
                     s.innerHTML = generateStripHtml(visualTarget); 
                     s.style.transition = 'none'; s.style.transform = `translateY(0px)`; 
                 });
+                
                 void document.body.offsetWidth;
-                const STOP_Y = -1 * ((STRIP_LEN - 5) * 140); let finished = 0;
+                const STOP_Y = -1 * ((STRIP_LEN - 5) * 140); 
+                let finished = 0;
+                
                 [1,2,3].forEach((id, idx) => {
-                    const dur = 1.5 + (idx*0.5);
+                    // Delay antar reel - UPDATED FOR MORE DRAMATIC STOP (400ms)
+                    const dur = 1.2 + (idx * 0.4); 
+                    
                     setTimeout(() => {
                         const s = document.getElementById(`strip${id}`); 
                         s.querySelectorAll('.slot-icon').forEach(e=>e.classList.add('blur-spin')); 
                         s.style.transition = `transform ${dur}s cubic-bezier(0.1, 0.9, 0.2, 1)`; 
                         s.style.transform = `translateY(${STOP_Y}px)`; 
                         const tick = setInterval(()=>playSound('spin'), 100);
+                        
                         s.addEventListener('transitionend', () => {
                             clearInterval(tick); 
                             s.querySelectorAll('.slot-icon').forEach(e=>e.classList.remove('blur-spin')); 
-                            s.style.transition = "transform 0.2s"; s.style.transform = `translateY(${STOP_Y + 15}px)`; 
-                            setTimeout(()=>{ s.style.transform = `translateY(${STOP_Y}px)`; }, 100);
-                            let currentItem = (isAlign || id===1) ? targetItem : {tier:0}; playSound('reelStop', currentItem); 
-                            if(isAlign) {
-                                let boltColor = '#ffffff'; let intensity = 2; let type = 'normal'; let is4Way = false; 
-                                if(targetItem.mut === 3) { boltColor = '#ff0000'; intensity = 18; type = 'demon'; } 
-                                else if(targetItem.mut === 2) { boltColor = '#a855f7'; intensity = 8; type = 'glitch'; } 
-                                else if(targetItem.mut === 1) { boltColor = '#afffff'; intensity = 7; type = 'shiny'; } 
-                                else if(targetItem.tier >= 4) { boltColor = targetItem.color; intensity = 8; } 
-                                if (targetItem.tier >= 4) { is4Way = true; }
-                                else if (targetItem.tier === 3 && targetItem.mut > 0) { is4Way = true; }
-                                triggerTargetedLightning(id, boltColor, intensity, type, targetItem.tier, is4Way); 
-                                playSound('win', targetItem); playSound('residue'); 
+                            
+                            // Bounce Effect
+                            s.style.transition = "transform 0.15s"; s.style.transform = `translateY(${STOP_Y + 15}px)`; 
+                            setTimeout(()=>{ s.style.transform = `translateY(${STOP_Y}px)`; }, 150);
+                            
+                            playSound('reelStop'); 
+
+                            // === LOGIKA BAM BAM BAM & SOUND UPDATED ===
+                            if (isWin) {
+                                // STOP sound win sebelumnya HANYA JIKA ada win baru
+                                stopWinSound(); 
+                                
+                                // Trigger Lightning Sesuai Kondisi Strict
+                                triggerLightning(id, targetItem, isFourWay); 
+                                
+                                // Sound Conditional
+                                if (isFourWay) {
+                                    playSound('win', targetItem); // Full Win Sound
+                                } else {
+                                    // 1-Way Win Logic: Play sound but cut it "setengah tambah dikit"
+                                    playSound('win', targetItem);
+                                    setTimeout(() => {
+                                        stopWinSound(); // Cut sound after 4.6s
+                                    }, 4600);
+                                }
                             }
-                            if(isGod && id===3) { document.getElementById('machineBody').classList.add('god-active'); document.getElementById('machineBody').style.setProperty('--target-color', targetItem.color); }
-                            finished++; if(finished === 3) setTimeout(resolve, isGod ? 1500 : 300);
+                            
+                            finished++; 
+                            if(finished === 3) setTimeout(resolve, isWin ? 800 : 300); 
                         }, {once:true});
-                    }, idx * 150);
+                    }, idx * 400); // UPDATED DELAY
                 });
             });
         }
 
-        // --- UI & SYSTEM ---
-        function updateUI() { 
-            document.getElementById('uiCash').innerText=state.cash.toLocaleString(); 
-            document.getElementById('uiCoins').innerText=state.coins.toLocaleString(); 
-            const pPill = document.getElementById('profilePill'); 
-            if(state.isGuest) { pPill.innerHTML = `👤 GUEST (LOGIN)`; pPill.className = 'profile-pill guest'; } 
-            else { pPill.innerHTML = `👤 ${state.user}`; pPill.className = 'profile-pill user'; } 
+        // --- SPECIAL REVEAL & CARD FACTORY ---
+
+        function getModifiedName(item) {
+            return item.name;
         }
 
-        function save() { if(!state.isGuest && state.user) localStorage.setItem('casino_legend_v_final_' + state.user, JSON.stringify(state)); }
-
-        function createJackpotParticles(container, color) {
-            for(let i=0; i<30; i++) {
-                const p = document.createElement('div'); p.className = 'jackpot-particle';
-                p.style.backgroundColor = color; p.style.boxShadow = `0 0 10px ${color}`;
-                const angle = Math.random() * Math.PI * 2; const dist = 100 + Math.random() * 150;
-                p.style.setProperty('--tx', Math.cos(angle) * dist + 'px'); p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
-                const dur = 0.6 + Math.random() * 0.4; p.style.animation = `particleExplode ${dur}s ease-out forwards`;
-                container.appendChild(p); setTimeout(() => p.remove(), dur * 1000);
+        function getTierText(item) {
+            if (item.mut > 0) {
+                if (item.mut === 3) return "DEMON MUTATION !!";
+                if (item.mut === 2) return "GLITCH MUTATION !!";
+                if (item.mut === 1) return "SHINY MUTATION !!";
             }
+            if (item.tier === 6) return "GOD TIER: JOKER !!";
+            if (item.tier === 5) return "GOD TIER: DRAGON !!";
+            if (item.tier === 4) return "GOD TIER: PHOENIX !!";
+            if (item.tier === 3) return "HIGH TIER ITEM !!";
+            return "ITEM FOUND !!";
         }
 
-        let jackpotPromiseResolver = null;
+        // FUNGSI UNTUK MENENTUKAN CLASS ANIMASI BERDASARKAN ITEM
+        function getCardAnimationClass(item) {
+            if (item.mut === 3) return "card-demon";
+            if (item.mut === 2) return "card-glitch";
+            if (item.mut === 1) return "card-shiny";
+            
+            // Non-mutasi berdasarkan tier
+            if (item.tier === 6) return "card-joker";
+            if (item.tier === 5) return "card-dragon";
+            if (item.tier === 4) return "card-phoenix";
+            if (item.tier >= 2) return "card-common";
+            return "card-common";
+        }
+
+        // FUNGSI UNTUK MENDAPATKAN BADGE MUTASI
+        function getMutationBadge(item) {
+            if (item.mut === 3) return { text: "DEMON", color: "#ff0000" };
+            if (item.mut === 2) return { text: "GLITCH", color: "#00ffff" };
+            if (item.mut === 1) return { text: "SHINY", color: "#ffffff" };
+            return null;
+        }
+
+        let jackpotResolver = null;
         function showJackpotPopup(item) { 
             return new Promise(resolve => { 
-                jackpotPromiseResolver = resolve; 
-                const pop = document.getElementById('jackpotPopup'); const cont = document.getElementById('jackpotCont'); const title = document.getElementById('jackpotTitle'); 
+                jackpotResolver = resolve; 
+                const pop = document.getElementById('jackpotPopup'); 
+                const cont = document.getElementById('jackpotCont'); 
+                const title = document.getElementById('jackpotTitle'); 
+                
                 cont.innerHTML = ''; 
-                let label = "GOD TIER FOUND!";
-                if (item.mut === 3) label = "DEMON MUTATION!"; else if (item.mut === 2) label = "GLITCH MUTATION!"; else if (item.mut === 1) label = "SHINY MUTATION!";
-                else if (item.tier === 6) label = "LEGENDARY JOKER!"; else if (item.tier === 5) label = "ANCIENT DRAGON!"; else if (item.tier === 4) label = "MYTHICAL PHOENIX!";
-                title.innerText = label; title.style.color = item.color;
-                createJackpotParticles(cont, item.color); 
-                const card = createCard(item); card.classList.add('jackpot-card'); 
-                cont.appendChild(card); pop.style.display = 'flex'; 
-                playSound('thunder'); playSound('mut', item.mut); 
+                title.innerText = "";
+                
+                const card = createCard(item, false); 
+                card.classList.add('jackpot-card'); 
+                
+                // Animasi Aesthetic Slowmotion
+                card.classList.add('anim-reveal'); 
+                
+                const animClass = getCardAnimationClass(item);
+                card.classList.add(animClass);
+                
+                const pulseText = document.createElement('div');
+                pulseText.className = 'tier-text-pulse';
+                pulseText.innerText = getTierText(item);
+                pulseText.style.color = item.mut > 0 ? (item.mut === 3 ? 'red' : item.color) : item.color;
+                cont.appendChild(pulseText);
+                
+                cont.appendChild(card); 
+                
+                if(item.mut > 0 || item.tier >= 5) {
+                    createJackpotParticles(cont, item.color);
+                }
+
+                pop.style.display = 'flex'; 
+                
+                setTimeout(() => {
+                    if(item.mut > 0) playSound('mut', item.mut); 
+                    else playSound('tier', item.tier); 
+                }, 600); 
             }); 
         }
         
-        function closeJackpot() { document.getElementById('jackpotPopup').style.display = 'none'; resetVisuals(); ensureBGM(); if(jackpotPromiseResolver) jackpotPromiseResolver(); }
-        
-        async function showRes(items) { 
-            const lay = document.getElementById('resultLayer'); const track = document.getElementById('cardTrack'); 
-            lay.style.display='flex'; track.innerHTML=''; 
-            for(let i=0; i<items.length; i++) { 
-                const item = items[i]; state.items.push(item); 
-                const el = createCard(item); track.appendChild(el); 
-                el.scrollIntoView({behavior:'smooth', inline:'center'}); 
-                await new Promise(r=>setTimeout(r,150)); 
-                el.classList.add('active'); 
-                if(item.mut > 0) playSound('mut', item.mut); else playSound('tier', item.tier); 
-                await new Promise(r=>setTimeout(r,200)); 
-            } 
-        }
-        function closeResult() { document.getElementById('resultLayer').style.display='none'; resetVisuals(); updateUI(); ensureBGM(); }
-        
-        function createCard(item) { 
-            const div = document.createElement('div'); let cls = 'card'; let label = ""; let color = item.color; 
-            if(item.mut===3) { cls+=' fx-demon'; label="DEMON"; color='var(--demon)'; } else if(item.mut===2) { cls+=' fx-glitch'; label="GLITCH"; color='var(--glitch)'; } else if(item.mut===1) { cls+=' fx-shiny'; label="SHINY"; color='#fff'; } else if(item.tier>=4) cls+=' t-dragon'; 
-            div.className = cls; div.style.setProperty('--glow', item.mut > 0 ? color : item.color); 
-            div.innerHTML = `<div class="card-img" style="text-shadow:0 0 20px ${item.color}">${item.emoji}</div><div class="card-name" style="color:${item.mut > 0 ? '#fff' : item.color}">${item.name}</div><div style="font-size:0.7rem; color:#aaa; margin-top:5px;">Val: ${item.val.toLocaleString()}</div>${label ? `<div class="mut-badge" style="background:${color}; color:${item.mut===3?'#fff':'#000'}">${label}</div>` : ''}`; return div; 
+        function closeJackpot() { 
+            document.getElementById('jackpotPopup').style.display = 'none'; 
+            if(jackpotResolver) jackpotResolver(); 
         }
 
+        function createCard(item, isInventoryMode = false) { 
+            const div = document.createElement('div'); 
+            let cls = 'card'; 
+            
+            const animClass = getCardAnimationClass(item);
+            cls += ' ' + animClass;
+            
+            let bgEffect = '';
+            if(item.mut === 3) bgEffect = '<div class="card-bg-fx fx-demon-bg"></div>';
+            else if(item.mut === 2) bgEffect = '<div class="card-bg-fx fx-glitch-bg"></div>';
+            else if(item.mut === 1) bgEffect = '<div class="card-bg-fx fx-shiny-bg"></div>';
+            
+            let particleSmoke = '';
+            if (item.mut > 0) {
+                particleSmoke = '<div class="particle-smoke"></div>';
+                const style = document.createElement('style');
+                style.textContent = `
+                    .particle-smoke::before { --tx: ${Math.random() * 100 - 50}px; --ty: ${Math.random() * 100 - 50}px; width: ${10 + Math.random() * 20}px; height: ${10 + Math.random() * 20}px; top: ${40 + Math.random() * 20}%; left: ${40 + Math.random() * 20}%; animation-delay: ${Math.random() * 2}s; }
+                    .particle-smoke::after { --tx: ${Math.random() * 100 - 50}px; --ty: ${Math.random() * 100 - 50}px; width: ${10 + Math.random() * 20}px; height: ${10 + Math.random() * 20}px; top: ${60 + Math.random() * 20}%; left: ${60 + Math.random() * 20}%; animation-delay: ${Math.random() * 2}s; }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            let imgClass = 'card-img';
+            if(item.mut === 2) imgClass += ' anim-glitch-img';
+            
+            div.className = cls; 
+            div.style.borderColor = item.color;
+            div.style.boxShadow = `0 0 30px ${item.color}80`;
+
+            const starClass = item.isFav ? 'card-fav-star is-fav' : 'card-fav-star';
+            const currency = item.isCash ? '💵' : '🪙';
+            const valDisplay = item.val.toLocaleString();
+            const realName = getModifiedName(item);
+
+            let bottomContent = '';
+            if (isInventoryMode) {
+                 bottomContent = `<button class="card-action-btn" onclick="event.stopPropagation(); sellSingleFromCard(this, ${item.uid})">JUAL ${currency}</button>`;
+            } else {
+                bottomContent = `<div class="card-price-text">${currency} ${valDisplay}</div>`;
+            }
+
+            const mutationBadge = getMutationBadge(item);
+            const badgeHTML = mutationBadge ? 
+                `<div class="mut-badge-tr" style="background:${mutationBadge.color}; box-shadow:0 0 10px ${mutationBadge.color};">${mutationBadge.text}</div>` : '';
+
+            div.innerHTML = `
+                ${bgEffect}
+                ${particleSmoke}
+                ${badgeHTML}
+                <div class="${starClass}" onclick="event.stopPropagation(); toggleItemFav(${item.uid}, this)">★</div>
+                <div class="${imgClass}" style="text-shadow:0 0 25px ${item.color}">${item.emoji}</div>
+                <div class="card-name" style="color:${item.mut > 0 ? '#fff' : item.color}; text-shadow: 0 2px 4px #000;">${realName}</div>
+                ${bottomContent}
+            `; 
+            
+            return div; 
+        }
+
+        function createJackpotParticles(container, color) {
+            for(let i=0; i<40; i++) {
+                const p = document.createElement('div'); 
+                p.style.cssText = `position:absolute; left:50%; top:50%; width:8px; height:8px; border-radius:50%; background:${color}; box-shadow:0 0 15px ${color}; pointer-events:none; z-index:30;`;
+                const angle = Math.random() * Math.PI * 2; const dist = 150 + Math.random() * 200;
+                p.style.setProperty('--tx', Math.cos(angle) * dist + 'px'); p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+                const dur = 0.5 + Math.random() * 0.5; p.style.animation = `particleExplode ${dur}s ease-out forwards`;
+                container.appendChild(p); setTimeout(() => p.remove(), dur * 1000);
+            }
+        }
+        
+        // --- RESULT PRESENTATION (5x SPIN SMOOTH FLOW) ---
+        
+        async function showRes(items) { 
+            const lay = document.getElementById('resultLayer'); 
+            const track = document.getElementById('cardTrack'); 
+            const scroller = document.getElementById('cardScroller');
+            
+            // Remove manual scroll class initially
+            scroller.classList.remove('manual');
+            
+            track.innerHTML = ''; 
+            lay.style.display = 'flex'; 
+            
+            scroller.scrollLeft = 0;
+            
+            // Smooth Entry
+            for(let i=0; i<items.length; i++) {
+                const item = items[i];
+                const el = createCard(item, false);
+                const animClass = getCardAnimationClass(item);
+                el.classList.add(animClass);
+                el.classList.add('anim-reveal'); 
+                track.appendChild(el);
+                
+                if(item.mut > 0) playSound('mut', item.mut); else playSound('tier', item.tier);
+                
+                el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+
+                await new Promise(r => setTimeout(r, 600)); // Sedikit lebih lambat untuk efek aesthetic
+            }
+            
+            // AKTIFKAN MANUAL SCROLL SETELAH SELESAI
+            scroller.classList.add('manual');
+            
+            updateProfileStats();
+        }
+
+        function closeResult() { 
+            document.getElementById('resultLayer').style.display='none'; 
+            updateUI(); save(); 
+        }
+
+        // --- INVENTORY SYSTEM & PREVIEW OVERLAY ---
+        let currentTab = 'all'; let quickFavMode = false;
+
+        function openInv(tab) { currentTab = tab; temp.filterType = 'all'; showModal('invModal'); switchTab(tab); }
+        
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            const btn = (tab === 'all') ? document.getElementById('tabAll') : (tab === 'mutant') ? document.getElementById('tabMut') : document.getElementById('tabFav');
+            btn.classList.add('active');
+            const ind = document.getElementById('tabInd');
+            if(tab === 'all') ind.style.left = '4px'; else if(tab === 'mutant') ind.style.left = '33.33%'; else ind.style.left = '66.66%';
+            renderInv();
+        }
+
+        function toggleQuickFav() {
+            quickFavMode = !quickFavMode;
+            const btn = document.getElementById('btnQuickFav');
+            if(quickFavMode) { btn.innerHTML = "⭐ MODE: ON"; btn.classList.add('active'); } 
+            else { btn.innerHTML = "⭐ FAV MANUAL"; btn.classList.remove('active'); }
+        }
+
+        function toggleItemFav(uid, starEl) {
+            const idx = state.items.findIndex(i => i.uid === uid);
+            if(idx > -1) {
+                state.items[idx].isFav = !state.items[idx].isFav;
+                // Update Visual Bintang langsung
+                if(starEl) { 
+                    if(state.items[idx].isFav) starEl.classList.add('is-fav'); 
+                    else starEl.classList.remove('is-fav'); 
+                }
+                save();
+                // AUTO REFRESH SORTING
+                renderInv(); 
+            }
+        }
+
+        // RENDER INVENTORY
+        function renderInv() {
+            const grid = document.getElementById('invGrid'); grid.innerHTML = '';
+            let list = [...state.items];
+
+            // Filter Tab
+            if(currentTab === 'mutant') list = list.filter(i => i.mut > 0);
+            else if(currentTab === 'fav') list = list.filter(i => i.isFav);
+
+            // Filter Kategori (Modal Filter)
+            if (temp.filterType && temp.filterType !== 'all') {
+                if(temp.filterType === 'god') list = list.filter(i => i.tier >= 4);
+                else if(temp.filterType === 'mutant') list = list.filter(i => i.mut > 0);
+                else if(temp.filterType === 'high') list = list.filter(i => i.tier >= 4);
+                else if(temp.filterType === 'mid') list = list.filter(i => i.tier >= 2 && i.tier < 4);
+                else if(temp.filterType === 'trash') list = list.filter(i => i.tier <= 1 && i.mut === 0);
+            }
+
+            // SORTING: Favorit > Tier > Mutasi > Value
+            list.sort((a,b) => { 
+                if (a.isFav && !b.isFav) return -1;
+                if (!a.isFav && b.isFav) return 1;
+                if (b.tier !== a.tier) return b.tier - a.tier; 
+                if (b.mut !== a.mut) return b.mut - a.mut;
+                return b.val - a.val;
+            });
+
+            document.getElementById('filterCount').innerText = `${list.length} Items`;
+            let fName = "SEMUA";
+            if(temp.filterType === 'god') fName = "DEWA"; else if(temp.filterType === 'trash') fName = "SAMPAH";
+            document.getElementById('filterLabel').innerText = `FILTER: ${fName}`;
+
+            list.forEach(i => {
+                const el = document.createElement('div'); 
+                el.className = 'inv-card-simple'; 
+                
+                if(i.mut===3) el.classList.add('inv-mut-3'); 
+                else if(i.mut===2) el.classList.add('inv-mut-2'); 
+                else if(i.mut===1) el.classList.add('inv-mut-1'); 
+                else el.style.borderColor = i.color;
+                
+                el.style.animation = i.mut > 0 ? 'commonFloat 3s ease-in-out infinite' : 'commonFloat 4s ease-in-out infinite';
+                el.style.animationDelay = Math.random() * 2 + 's';
+                
+                let badge = ""; 
+                if(i.mut===3) badge="DMN"; 
+                else if(i.mut===2) badge="GLT"; 
+                else if(i.mut===1) badge="SHN";
+                
+                const starActive = i.isFav ? '<span style="color:gold; text-shadow:0 0 5px gold;">★</span>' : '<span style="color:#333;">★</span>';
+
+                el.innerHTML = `
+                    <div style="position:absolute; top:2px; left:5px; font-size:1rem; z-index:2;">${starActive}</div>
+                    ${badge ? `<div style="position:absolute; top:0; right:0; background:${i.color}; color:#000; font-size:0.5rem; font-weight:bold; padding:2px 4px; border-bottom-left-radius:5px;">${badge}</div>` : ''}
+                    <div style="font-size:40px; text-shadow:0 0 5px ${i.color}">${i.emoji}</div>
+                `;
+                
+                el.onclick = () => { 
+                    if(quickFavMode) { toggleItemFav(i.uid, null); } 
+                    else { inspectItem(i); } 
+                };
+                grid.appendChild(el);
+            });
+        }
+
+        // --- INSPECT ITEM (POPUP DI ATAS TAS) ---
         function inspectItem(item) { 
-            const over = document.getElementById('previewOverlay'); const cont = document.getElementById('previewCont'); const actions = document.getElementById('sellActions'); 
-            cont.innerHTML = ''; actions.innerHTML = ''; 
-            const card = createCard(item); card.classList.add('active'); card.classList.add('jackpot-card'); card.classList.add('fast-anim'); 
+            const over = document.getElementById('previewOverlay'); 
+            const cont = document.getElementById('previewContent'); 
+            cont.innerHTML = ''; 
+            
+            const card = createCard(item, true); 
+            const animClass = getCardAnimationClass(item);
+            card.classList.add(animClass);
+            card.classList.add('anim-reveal'); 
+            
             cont.appendChild(card); 
-            const btn = document.createElement('button'); btn.className = 'btn-act'; 
-            btn.style.cssText = "background:#d00; padding:10px 20px; border:2px solid #fff; z-index:999;"; 
-            btn.innerHTML = `JUAL (💵 ${item.val.toLocaleString()})`; 
-            btn.onclick = (e) => { e.stopPropagation(); sellSingle(item); }; 
-            actions.appendChild(btn); 
-            over.style.display = 'flex'; setTimeout(() => over.classList.add('show'), 10); 
+            over.style.display = 'flex'; 
+            
             if(item.mut > 0) playSound('mut', item.mut); else playSound('tier', item.tier); 
         }
         
-        function closePreview() { const over = document.getElementById('previewOverlay'); over.classList.remove('show'); setTimeout(() => over.style.display='none', 200); }
-        function toggleBoost() { temp.boost=!temp.boost; document.getElementById('btnBoost').classList.toggle('active'); document.getElementById('machineBody').classList.toggle('boost-active'); playSound('boost'); }
-        function showModal(id) { const el = document.getElementById(id); el.style.display='flex'; setTimeout(()=>el.classList.add('open'), 10); }
-        function hideModal(id) { const el = document.getElementById(id); el.classList.remove('open'); setTimeout(()=>el.style.display='none', 300); }
+        function closePreview() { 
+            document.getElementById('previewOverlay').style.display='none'; 
+        }
 
-        function buy(t, g, c) { temp.pendingTx = { type: t, gain: g, cost: c }; const msg = t === 'coin' ? `BELI <span style="color:var(--gold)">${g.toLocaleString()} KOIN</span><br>HARGA: <span style="color:#4ade80">Rp ${c.toLocaleString()}</span>` : `TOP UP SALDO<br><span style="color:#4ade80">Rp ${c.toLocaleString()}</span>`; document.getElementById('confirmMsg').innerHTML = msg; document.getElementById('confirmModal').style.display = 'flex'; }
-        function processTransaction() { const tx = temp.pendingTx; if(!tx) return; if(tx.type === 'coin') { if(state.cash < tx.cost) { showSystemAlert("INSUFFICIENT FUNDS"); closeConfirm(); return; } state.cash -= tx.cost; state.coins += tx.gain; } else { state.cash += tx.gain; } updateUI(); save(); playSound('tier', 1); closeConfirm(); }
+        function sellSingleFromCard(btnElement, uid) {
+            const item = state.items.find(i => i.uid === uid); if(!item) return;
+            
+            // PROTEKSI FAVORIT
+            if(item.isFav) { showSystemAlert("ITEM FAVORIT TIDAK BISA DIJUAL!"); return; }
+
+            const currency = item.isCash ? '💵 Rp' : '🪙';
+            
+            openSellModal(`JUAL: ${item.name}?<br><br>HARGA: <span style="color:${item.isCash ? '#4ade80' : 'gold'}">${currency} ${item.val.toLocaleString()}</span>`, () => { 
+                
+                state.items = state.items.filter(i => i.uid !== uid); 
+                if(item.isCash) { state.cash += item.val; addToHistory('IN', `JUAL: ${item.name}`, item.val); } 
+                else { state.coins += item.val; addToHistory('IN', `JUAL: ${item.name}`, item.val); }
+                
+                updateUI(); save(); playSound('tier', 1); 
+                
+                closePreview();
+                renderInv(); 
+            });
+        }
+
+        // --- SHOP & ECONOMY ---
+        function redeem() { 
+            const inp = document.getElementById('codeInput'); const c = inp.value.toUpperCase().trim(); 
+            let msg = "KODE TIDAK VALID"; let success = false;
+            
+            if(c==='ENGGACOR') { 
+                state.cash += 100000000; msg = "SUKSES: +RP 100.000.000 SALDO"; 
+                addToHistory('IN', "REDEEM: 100JT SALDO", 100000000); success = true; 
+            }
+            else if(c==='POTIONDARIENG') { 
+                temp.luckExpiry = Date.now() + 60000; playSound('mut', 3); 
+                msg = "POTION AKTIF: LUCK 60 DETIK!"; 
+                addToHistory('IN', "REDEEM: POTION (60 DETIK)", 0); updateMachineState(); success = true;
+            } 
+            
+            if(success) { hideModal('shopModal'); inp.value = ''; showSystemAlert(msg); } 
+            else { showSystemAlert(msg); }
+            updateUI(); save(); 
+        }
+
+        function updateFilterCounts() {
+            const all = state.items;
+            document.getElementById('cntGod').innerText = all.filter(i => i.tier >= 4).length;
+            document.getElementById('cntMut').innerText = all.filter(i => i.mut > 0).length;
+            document.getElementById('cntHigh').innerText = all.filter(i => i.tier >= 4).length;
+            document.getElementById('cntMid').innerText = all.filter(i => i.tier >= 2 && i.tier < 4).length;
+            document.getElementById('cntTrash').innerText = all.filter(i => i.tier <= 1 && i.mut === 0).length;
+        }
+
+        function applyFilter(type) { temp.filterType = type; hideModal('filterModal'); renderInv(); }
+
+        function sellByFilter() {
+            let candidates = [...state.items];
+            if(currentTab === 'mutant') candidates = candidates.filter(i => i.mut > 0);
+            else if(currentTab === 'fav') candidates = candidates.filter(i => i.isFav);
+            
+            if (temp.filterType && temp.filterType !== 'all') {
+                if(temp.filterType === 'god') candidates = candidates.filter(i => i.tier >= 4);
+                else if(temp.filterType === 'mutant') candidates = candidates.filter(i => i.mut > 0);
+                else if(temp.filterType === 'high') candidates = candidates.filter(i => i.tier >= 4);
+                else if(temp.filterType === 'mid') candidates = candidates.filter(i => i.tier >= 2 && i.tier < 4);
+                else if(temp.filterType === 'trash') candidates = candidates.filter(i => i.tier <= 1 && i.mut === 0);
+            }
+            
+            // PROTEKSI FAVORIT (Exclude Favorite Items)
+            const toSell = candidates.filter(i => !i.isFav); 
+            
+            if(toSell.length === 0) { showSystemAlert("TIDAK ADA ITEM (FAVORIT DILINDUNGI)"); return; }
+            
+            let tCash = 0; let tCoin = 0;
+            toSell.forEach(i => { if(i.isCash) tCash += i.val; else tCoin += i.val; });
+
+            let msg = `JUAL ${toSell.length} ITEM?<br><br>`;
+            if(tCash > 0) msg += `SALDO: <span style="color:#4ade80">Rp ${tCash.toLocaleString()}</span><br>`;
+            if(tCoin > 0) msg += `KOIN: <span style="color:var(--gold)">${tCoin.toLocaleString()}</span>`;
+
+            openSellModal(msg, () => {
+                const ids = toSell.map(i => i.uid);
+                state.items = state.items.filter(i => !ids.includes(i.uid));
+                state.cash += tCash; state.coins += tCoin;
+                if(tCash > 0) addToHistory('IN', `JUAL FILTER (SALDO)`, tCash);
+                if(tCoin > 0) addToHistory('IN', `JUAL FILTER (KOIN)`, tCoin);
+                updateUI(); save(); renderInv(); playSound('tier', 1);
+            });
+        }
+
+        function buy(t, g, c) { 
+            temp.pendingTx = { type: t, gain: g, cost: c }; 
+            const msg = t === 'coin' ? 
+                `BELI <span style="color:var(--gold)">${g.toLocaleString()} KOIN</span><br>HARGA: <span style="color:#4ade80">Rp ${c.toLocaleString()}</span>` : 
+                `TOP UP SALDO<br><span style="color:#4ade80">Rp ${c.toLocaleString()}</span>`; 
+            document.getElementById('confirmMsg').innerHTML = msg; document.getElementById('confirmModal').style.display = 'flex'; 
+        }
+        
+        function processTransaction() { 
+            const tx = temp.pendingTx; if(!tx) return; 
+            if(tx.type === 'coin') { 
+                if(state.cash < tx.cost) { showSystemAlert("SALDO KURANG"); closeConfirm(); return; } 
+                state.cash -= tx.cost; state.coins += tx.gain; addToHistory('OUT', 'BELI KOIN', tx.cost); 
+            } else { 
+                state.cash += tx.gain; addToHistory('IN', 'TOP UP', tx.gain); 
+            } 
+            updateUI(); save(); playSound('tier', 1); closeConfirm(); 
+        }
+        
         function closeConfirm() { document.getElementById('confirmModal').style.display = 'none'; temp.pendingTx = null; }
-
-        function sellSingle(item) { openSellModal(`JUAL ITEM INI SEHARGA<br><span style="color:#4ade80; font-size:1.2rem;">💵 ${item.val.toLocaleString()}</span>?`, () => { state.items = state.items.filter(i => i.uid !== item.uid); state.cash += item.val; updateUI(); save(); playSound('tier', 1); closePreview(); openInv('all'); }); }
-        function sellTrash() { const trash = state.items.filter(i=>i.tier===0 && i.mut===0); const val = trash.reduce((a,b)=>a+b.val,0); if(val>0) { openSellModal(`JUAL SEMUA SAMPAH SEHARGA<br><span style="color:#4ade80; font-size:1.2rem;">💵 ${val.toLocaleString()}</span>?`, () => { state.items = state.items.filter(i=>i.tier>0 || i.mut>0); state.cash+=val; updateUI(); save(); openInv('all'); }); } else showSystemAlert("TIDAK ADA SAMPAH"); }
         function openSellModal(msg, callback) { document.getElementById('sellMsg').innerHTML = msg; sellCallback = callback; document.getElementById('sellModal').style.display = 'flex'; }
         function closeSellModal() { document.getElementById('sellModal').style.display = 'none'; sellCallback = null; }
         document.getElementById('btnConfirmSell').onclick = () => { if(sellCallback) sellCallback(); closeSellModal(); };
 
-        function openInv(filter) { 
-            const el = document.getElementById('invModal'); el.style.display='flex'; setTimeout(()=>el.classList.add('open'), 10);
-            const g = document.getElementById('invGrid'); g.innerHTML=''; 
-            let list = [...state.items].sort((a,b) => { if(b.tier !== a.tier) return b.tier - a.tier; return b.mut - a.mut; }); 
-            if(filter==='mutant') list = list.filter(i=>i.mut>0); 
-            list.forEach(i => { 
-                const el = document.createElement('div'); el.className = 'inv-card-simple'; 
-                if(i.mut===3) el.classList.add('inv-mut-3'); else if(i.mut===2) el.classList.add('inv-mut-2'); else if(i.mut===1) el.classList.add('inv-mut-1'); else el.style.borderColor = i.color;
-                el.onclick = () => inspectItem(i); 
-                el.innerHTML = `<div style="font-size:35px; text-shadow:0 0 5px ${i.color}">${i.emoji}</div><div style="color:${i.color}; font-size:0.7rem; font-weight:bold; margin-top:5px;">${i.name}</div>`; g.appendChild(el); 
-            }); 
+        function renderShop() { 
+            const cList=[{g:300,c:10000},{g:1000,c:20000},{g:1500,c:26000},{g:2500,c:40000},{g:5100,c:80000},{g:10300,c:160000},{g:20600,c:320000},{g:350000,c:5000000}]; 
+            const sList=[10000,25000,50000,80000,100000,200000,350000,500000,1000000,5000000]; 
+            document.getElementById('coinGrid').innerHTML = cList.map(o=>`<div class="shop-item" onclick="buy('coin',${o.g},${o.c})"><div>🪙</div><div>${o.g.toLocaleString()}</div><div style="color:var(--gold); font-size:0.8rem;">IDR ${o.c.toLocaleString()}</div></div>`).join(''); 
+            document.getElementById('cashGrid').innerHTML = sList.map(v=>`<div class="shop-item" onclick="buy('cash',${v},${v})"><div>💵</div><div style="color:#4ade80; font-weight:bold;">IDR ${v.toLocaleString()}</div></div>`).join(''); 
         }
 
-        function renderShop() { const cList=[{g:300,c:10000},{g:1000,c:20000},{g:1500,c:26000},{g:2500,c:40000},{g:5100,c:80000},{g:10300,c:160000},{g:20600,c:320000},{g:350000,c:5000000}]; const sList=[10000,25000,50000,80000,100000,200000,350000,500000,1000000,5000000]; document.getElementById('coinGrid').innerHTML = cList.map(o=>`<div class="shop-item" onclick="buy('coin',${o.g},${o.c})"><div>🪙</div><div>${o.g.toLocaleString()}</div><div style="color:var(--gold)">${o.c.toLocaleString()}</div></div>`).join(''); document.getElementById('cashGrid').innerHTML = sList.map(v=>`<div class="shop-item" onclick="buy('cash',${v},${v})"><div>💵</div><div>${v.toLocaleString()}</div><div style="color:#4ade80">Rp ${v.toLocaleString()}</div></div>`).join(''); }
-        function redeem() { const c = document.getElementById('codeInput').value.toUpperCase(); if(c==='ENGGACOR') state.cash+=100000000; else if(c==='POTIONDARIENG') { temp.luck=true; document.getElementById('luckStatus').style.display='flex'; document.getElementById('machineBody').classList.add('glow-demon'); playSound('mut', 3); setTimeout(()=>{temp.luck=false;document.getElementById('luckStatus').style.display='none';document.getElementById('machineBody').classList.remove('glow-demon')},60000); } updateUI(); save(); }
+        // --- GENERAL UI UTILS ---
+        function updateUI() { 
+            document.getElementById('uiCash').innerText = state.cash.toLocaleString(); 
+            document.getElementById('uiCoins').innerText = state.coins.toLocaleString(); 
+            const pPill = document.getElementById('profilePill'); 
+            if(state.isGuest) { pPill.innerHTML = `👤 GUEST`; pPill.className = 'profile-pill guest'; } 
+            else { pPill.innerHTML = `👤 ${state.user}`; pPill.className = 'profile-pill user'; } 
+        }
 
+        function showModal(id) { 
+            const el = document.getElementById(id); el.style.display='flex'; setTimeout(()=>el.classList.add('open'), 10);
+            if(id === 'profileModal') updateProfileStats(); if(id === 'invModal') renderInv(); 
+            if(id === 'shopModal') renderShop(); if(id === 'filterModal') updateFilterCounts(); 
+            if (id === 'profileModal') {
+                const btn = document.getElementById('btnAuth');
+                if (state.isGuest) { btn.innerHTML = "🔑 LOGIN AKUN"; btn.style.borderColor = "#4ade80"; btn.style.color = "#4ade80"; btn.style.background = "#002200"; } 
+                else { btn.innerHTML = "🔒 LOGOUT AKUN"; btn.style.borderColor = "#f00"; btn.style.color = "#f87171"; btn.style.background = "#310000"; }
+            }
+        }
+        function hideModal(id) { const el = document.getElementById(id); el.classList.remove('open'); setTimeout(()=>el.style.display='none', 400); }
+
+        function updateProfileStats() {
+            document.getElementById('pNameDisp').innerText = state.user || "GUEST";
+            document.getElementById('pTotalItem').innerText = state.items.length;
+            document.getElementById('pFavItem').innerText = state.items.filter(i=>i.isFav).length;
+            document.getElementById('statIn').innerText = state.totalIn.toLocaleString();
+            document.getElementById('statOut').innerText = state.totalOut.toLocaleString();
+            document.getElementById('statNet').innerText = (state.totalIn - state.totalOut).toLocaleString();
+            const list = document.getElementById('historyList'); list.innerHTML = '';
+            if(!state.history || state.history.length === 0) { list.innerHTML = '<div style="text-align:center; color:#444; padding:10px;">BELUM ADA DATA</div>'; } 
+            else {
+                state.history.forEach(h => {
+                    const row = document.createElement('div'); row.style.cssText = "display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #222; font-size:0.7rem;";
+                    const color = h.type === 'IN' ? '#4ade80' : '#f87171'; const sign = h.type === 'IN' ? '+' : '-';
+                    row.innerHTML = `<div style="flex:1; text-align:left;">${h.desc}<br><span style="color:#555;">${h.date}</span></div><div style="color:${color}; font-weight:bold;">${sign} ${h.amount.toLocaleString()}</div>`;
+                    list.appendChild(row);
+                });
+            }
+        }
+        
+        function addToHistory(type, desc, amount) {
+            if(state.isGuest) return;
+            if(type === 'IN') state.totalIn += amount; else if(type === 'OUT') state.totalOut += amount;
+            const record = { type: type, desc: desc, amount: amount, date: new Date().toLocaleTimeString() };
+            state.history.unshift(record);
+            if(state.history.length > 50) state.history.pop();
+            save();
+        }
+
+        function handleAuthAction() {
+            if (state.isGuest) {
+                document.getElementById('profileModal').classList.remove('open');
+                setTimeout(() => document.getElementById('profileModal').style.display='none', 300);
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('username').value = ""; document.getElementById('password').value = "";
+            } else { doLogout(); }
+        }
+
+        function doLogout() {
+            state = { user: "", pass: "", isGuest: false, cash: 0, coins: 5000 };
+            document.getElementById('profileModal').classList.remove('open');
+            setTimeout(() => document.getElementById('profileModal').style.display='none', 300);
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('username').value = ""; document.getElementById('password').value = "";
+        }
+        
+        function toggleHistory() { const sec = document.getElementById('historySection'); sec.style.display = sec.style.display === 'none' ? 'block' : 'none'; }
+        
         function showSystemAlert(msg, showCancel = false, cancelCallback = null) { 
             document.getElementById('alertText').innerHTML = msg; document.getElementById('systemAlert').style.display = 'flex'; 
-            const btnCancel = document.getElementById('btnAlertCancel');
-            if(showCancel) { btnCancel.style.display = 'inline-block'; temp.alertCallback = cancelCallback; } 
-            else { btnCancel.style.display = 'none'; temp.alertCallback = null; }
+            const btnCancel = document.getElementById('btnAlertCancel'); const btnOk = document.getElementById('btnAlertOk');
+            if(showCancel) { btnCancel.style.display = 'inline-block'; btnOk.innerText = "LANJUT"; temp.alertCallback = cancelCallback; } 
+            else { btnCancel.style.display = 'none'; btnOk.innerText = "MENGERTI"; temp.alertCallback = null; } 
             playSound('tier', 1); 
         }
-        function handleAlertOk() { document.getElementById('systemAlert').style.display = 'none'; }
-        function handleAlertCancel() { document.getElementById('systemAlert').style.display = 'none'; if(temp.alertCallback) temp.alertCallback(); }
-        function handleProfileClick() { if(state.isGuest) { if(confirm("LOGIN TO ACCESS FULL FEATURES?\n(Current guest data will be lost)")) { document.getElementById('loginScreen').style.display='flex'; } } }
+        function handleAlertOk() { document.getElementById('systemAlert').style.display = 'none'; if(temp.alertCallback) temp.alertCallback(); }
+        function handleAlertCancel() { document.getElementById('systemAlert').style.display = 'none'; }
     </script>
 </body>
 </html>
