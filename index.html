@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GOD PERFECT: TRUE THUNDER V12 - ULTIMATE REVISION</title>
+    <title>GOD PERFECT: TRUE THUNDER V13 - ULTIMATE FILTER</title>
     <style>
         /* ===== VARIABLES ===== */
         :root {
@@ -104,7 +104,14 @@
 
         /* MACHINE */
         .stage { flex: 1; display: flex; flex-direction: column; align-items: center; padding-top: 5vh; position: relative; width: 100%; z-index: 10; }
-        .machine-casing { position: relative; padding: 15px; width: 340px; background: linear-gradient(135deg, #2a2a2a 0%, #111 40%, #000 100%); border-radius: 20px; border: 4px solid #444; box-shadow: 0 0 0 5px #111, 0 0 0 8px #333, 0 0 60px rgba(0,0,0,0.8); margin-bottom: 20px; z-index: 10; overflow: hidden; transition: border-color 0.1s; }
+        .machine-casing { 
+            position: relative; padding: 15px; width: 340px; 
+            background: linear-gradient(135deg, #2a2a2a 0%, #111 40%, #000 100%); 
+            border-radius: 20px; border: 4px solid #444; 
+            box-shadow: 0 0 60px rgba(0,0,0,0.8); /* Default Shadow */
+            margin-bottom: 20px; z-index: 10; overflow: hidden; 
+            transition: border-color 0.3s, box-shadow 0.3s; /* Smooth Transition untuk Glow */
+        }
         
         .slot-window { width: 100%; height: 450px; background: #000; border: 4px solid #222; border-radius: 10px; display: flex; gap: 4px; padding: 4px; position: relative; overflow: hidden; }
         .reel { flex: 1; background: #080808; border-radius: 4px; overflow: hidden; position: relative; }
@@ -126,15 +133,15 @@
         .card .card-name { font-size: 1.2rem; margin-top: 20px; text-align: center; padding: 0 10px; z-index: 5; font-weight: 900; letter-spacing: 1px; }
         .card-bg-fx { position: absolute; inset: 0; z-index: 1; opacity: 0.4; }
 
-        /* ANIMASI KARTU - UPDATED FOR REQUEST */
+        /* ANIMASI KARTU */
         
-        /* DEMON: Increased Scale Amplitude */
+        /* DEMON */
         @keyframes demonFloat { 
             0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 15px rgba(255, 0, 60, 0.7)); } 
             50% { transform: translateY(-20px) scale(1.15); filter: drop-shadow(0 0 30px rgba(255, 0, 60, 0.9)); } 
         }
 
-        /* GLITCH: Faster & More Chaos */
+        /* GLITCH */
         @keyframes glitchMove { 
             0% { transform: translate(0, 0) scale(1); filter: drop-shadow(5px 0 0 red) drop-shadow(-5px 0 0 cyan); } 
             20% { transform: translate(-9px, 7px) scale(1.06); } 
@@ -144,7 +151,6 @@
             100% { transform: translate(0, 0); } 
         }
 
-        /* Glitch Chaos for Text/Img */
         @keyframes glitchChaos { 
             0% { transform: translate(0); text-shadow: -4px 0 red, 4px 0 blue; clip-path: inset(0 0 0 0); }
             20% { transform: translate(-5px, 5px) skewX(20deg); clip-path: inset(10% 0 80% 0); }
@@ -169,7 +175,7 @@
         @keyframes commonFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
         
         .card-demon .card-img { animation: demonFloat 1.5s ease-in-out infinite; }
-        .card-glitch .card-img { animation: glitchMove 0.3s linear infinite; } /* Faster Glitch */
+        .card-glitch .card-img { animation: glitchMove 0.3s linear infinite; }
         .card-shiny .card-img { animation: shinyFloat 1.2s ease-in-out infinite; }
         .card-joker .card-img { animation: jokerFloat 2s ease-in-out infinite; }
         .card-dragon .card-img { animation: dragonAppear 1.5s ease-in-out infinite; }
@@ -188,12 +194,14 @@
         .fx-glitch-bg { background: repeating-linear-gradient(45deg, #000, #000 10px, #001111 10px, #001111 20px); }
         .fx-shiny-bg { background: radial-gradient(circle at 50% 50%, #fff 0%, #ccc 20%, #000 80%); }
 
+        /* REVISI ANIMASI KARTU: EXTREME SLOWMO & ZOOM */
         @keyframes aestheticReveal {
-            0% { opacity: 0; transform: scale(0.4) translateY(100px) rotate(10deg); filter: blur(20px) brightness(2); }
-            40% { opacity: 1; transform: scale(1.05) translateY(-10px) rotate(-2deg); filter: blur(0px) brightness(1.2); }
-            100% { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); filter: blur(0px) brightness(1); }
+            0% { opacity: 0; transform: scale(0.3) translateY(80px) rotate(15deg); filter: blur(15px) brightness(2); }
+            50% { opacity: 1; transform: scale(1.25) translateY(0) rotate(-2deg); filter: blur(0px) brightness(1.3); } /* Zoom Over */
+            100% { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); filter: brightness(1); } /* Settle Smooth */
         }
-        .anim-reveal { animation: aestheticReveal 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        /* UPDATED: DURASI 3.0s UNTUK EXTRA SLOWMO */
+        .anim-reveal { animation: aestheticReveal 3.0s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
 
         .result-layer { display: none; flex-direction: row; justify-content: center; align-items: center; position:fixed; inset:0; background:rgba(0,0,0,0.97); z-index: 9200; backdrop-filter: blur(10px); }
         
@@ -262,6 +270,9 @@
     <audio id="winAudio2" src="https://l.top4top.io/m_3663vc4970.mp3"></audio>
     <audio id="thunderAudio" src="https://a.top4top.io/m_36636a1cl0.mp3"></audio>
     <audio id="thunderAudio2" src="https://a.top4top.io/m_36636a1cl0.mp3"></audio>
+    
+    <audio id="winOneWay" src="https://k.top4top.io/m_36682y0ve0.mp3" preload="auto"></audio>
+
     <div id="systemAlert">
         <div class="alert-box">
             <div style="font-size:3rem; margin-bottom:10px;">⚠️</div>
@@ -306,16 +317,16 @@
             <div class="modal-body">
                 <div style="display:flex; flex-direction:column; gap:12px;">
                     <button class="btn-act" style="padding:15px; background:#111; border:1px solid var(--target-color); color:#fff; display:flex; justify-content:space-between;" onclick="applyFilter('god')">
-                        <span>DEWA & LEGEND</span> <span id="cntGod" style="color:var(--gold)">0</span>
+                        <span>DEWA (SEMUA ITEM)</span> <span id="cntGod" style="color:var(--gold)">0</span>
                     </button>
                     <button class="btn-act" style="padding:15px; background:#111; border:1px solid var(--demon); color:#fff; display:flex; justify-content:space-between;" onclick="applyFilter('mutant')">
-                        <span>SEMUA MUTASI</span> <span id="cntMut" style="color:var(--demon)">0</span>
+                        <span>KHUSUS MUTASI</span> <span id="cntMut" style="color:var(--demon)">0</span>
                     </button>
                     <button class="btn-act" style="padding:15px; background:#111; border:1px solid var(--phoenix); color:#fff; display:flex; justify-content:space-between;" onclick="applyFilter('high')">
-                        <span>HIGH TIER (T4+)</span> <span id="cntHigh" style="color:var(--phoenix)">0</span>
+                        <span>HIGH TIER (SPECIAL)</span> <span id="cntHigh" style="color:var(--phoenix)">0</span>
                     </button>
                     <button class="btn-act" style="padding:15px; background:#111; border:1px solid var(--joker); color:#fff; display:flex; justify-content:space-between;" onclick="applyFilter('mid')">
-                        <span>MID TIER (T2-T3)</span> <span id="cntMid" style="color:var(--joker)">0</span>
+                        <span>MID TIER (ORB-STICK)</span> <span id="cntMid" style="color:var(--joker)">0</span>
                     </button>
                     <button class="btn-act" style="padding:15px; background:#111; border:1px solid #555; color:#aaa; display:flex; justify-content:space-between;" onclick="applyFilter('trash')">
                         <span>SAMPAH (T0-T1)</span> <span id="cntTrash">0</span>
@@ -411,8 +422,8 @@
     </div>
 
     <div id="startScreen">
-        <h1 style="font-size:3.5rem; margin-bottom:20px; color:var(--demon); text-shadow:0 0 30px #f00; text-transform:uppercase; text-align:center; line-height:1.2;">KAKEK SUSANOO<br><span style="font-size:1.5rem; color:#fff;">TRUE THUNDER V12</span></h1>
-        <p style="color:#aaa; font-size:0.8rem; margin-bottom:30px; letter-spacing:2px;">ULTIMATE UPGRADE: REAL LIGHTNING</p>
+        <h1 style="font-size:3.5rem; margin-bottom:20px; color:var(--demon); text-shadow:0 0 30px #f00; text-transform:uppercase; text-align:center; line-height:1.2;">KAKEK SUSANOO<br><span style="font-size:1.5rem; color:#fff;">TRUE THUNDER V13</span></h1>
+        <p style="color:#aaa; font-size:0.8rem; margin-bottom:30px; letter-spacing:2px;">ULTIMATE UPGRADE: GOD FILTER LOGIC</p>
         <button class="btn-start" onclick="startGame()">🔊 MULAI GAME</button>
     </div>
 
@@ -514,6 +525,9 @@
         const bgm1 = document.getElementById('bgm1'); const bgm2 = document.getElementById('bgm2'); 
         const SWAP_TIME = 96.0; let isSwapping = false;
 
+        // VARIABLE UNTUK 1-WAY LIGHTNING SOUND
+        let activeOneWaySound = null;
+
         function playSound(type, param) {
             if(actx && actx.state==='suspended') actx.resume();
 
@@ -575,6 +589,31 @@
                 else if (param === 3) playChord([261.6, 329.6, 392.0], 'triangle', 0.6); 
                 else if (param >= 4) { let notes = [261.6, 329.6, 392.0, 523.2]; notes.forEach((freq, i) => { setTimeout(() => playChord([freq], 'triangle', 0.5), i * 150); }); } 
             }
+        }
+
+        // --- REVISI AUDIO: HARD RESET / NO GEMA ---
+        function playOneWaySound(isFinal) {
+            // Kita gunakan logika yang sama persis dengan 'winAudio' (4 jalur)
+            // Stop sound lama jika ada
+            if(activeOneWaySound) {
+                activeOneWaySound.pause();
+                activeOneWaySound.currentTime = 0;
+            }
+
+            // Ambil elemen audio
+            const el = document.getElementById('winOneWay');
+            
+            // Hard Reset agar suara mulai dari 0 dan BERSIH
+            el.pause();
+            el.currentTime = 0;
+            
+            // Set Volume MAX (1.0) agar keras tapi tidak pecah/gema
+            el.volume = 1.0; 
+            
+            el.play().catch(e => console.log("Audio error", e));
+            
+            // Update pointer
+            activeOneWaySound = el;
         }
 
         function playChord(freqs, type, dur) { 
@@ -787,9 +826,17 @@
                 ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
                 ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
                 
-                ctx.fillStyle = this.glowColor; 
+                // Color Logic
+                let drawColor = this.glowColor;
+                if(this.glowColor === 'glitch') {
+                   // Chaotic Random Colors per frame
+                   const colors = ['#800080', '#ff0000', '#ffffff', '#00ff00'];
+                   drawColor = colors[Math.floor(Math.random() * colors.length)];
+                }
+
+                ctx.fillStyle = drawColor; 
                 ctx.globalAlpha = this.life * 0.7; 
-                ctx.shadowBlur = 120; ctx.shadowColor = this.glowColor;
+                ctx.shadowBlur = 120; ctx.shadowColor = drawColor;
                 ctx.beginPath(); ctx.arc(this.tx, this.ty, this.intensity * 12 * this.life, 0, Math.PI*2); ctx.fill(); 
                 ctx.globalAlpha = 1.0;
 
@@ -802,14 +849,19 @@
                     ctx.moveTo(startX, startY);
                     
                     // Core (Putih) vs Satelit (Warna Glow)
-                    const lineColor = b.isCore ? this.coreColor : this.glowColor;
+                    let lineColor = b.isCore ? this.coreColor : drawColor;
+                    if (this.glowColor === 'glitch' && !b.isCore) {
+                         const colors = ['#00ffff', '#ff00ff', '#ffffff', '#00ff00'];
+                         lineColor = colors[Math.floor(Math.random() * colors.length)];
+                    }
+
                     const lineWidth = b.width * (this.life + 0.5) * (b.intensity || 1);
                     const shadowBlur = b.isCore ? 80 : 40;
                     
                     ctx.strokeStyle = lineColor;
                     ctx.lineWidth = lineWidth;
                     ctx.shadowBlur = shadowBlur;
-                    ctx.shadowColor = this.glowColor;
+                    ctx.shadowColor = drawColor;
                     
                     let disp = 150 * (b.jagged || 1);
                     
@@ -873,14 +925,14 @@
                     glowColor = "#ffffff"; // Default Basic White untuk petir 1 jalur biasa
                 }
             } else {
-                // Mutasi (Warna Petir Sesuai Mutasi)
-                if (item.mut === 3) { glowColor = "#ff0000"; intensity = 12; } // Demon
-                else if (item.mut === 2) { glowColor = "#00ffff"; intensity = 10; } // Glitch
-                else if (item.mut === 1) { glowColor = "#ffffff"; intensity = 8; } // Shiny
+                // Mutasi (Warna Petir Sesuai Mutasi - UPDATE REVISI)
+                if (item.mut === 3) { glowColor = "#8b0000"; intensity = 15; } // Demon: Deep Red
+                else if (item.mut === 2) { glowColor = "glitch"; intensity = 12; } // Glitch: Random Code
+                else if (item.mut === 1) { glowColor = "#40e0d0"; intensity = 10; } // Shiny: Tosca/Cyan
             }
 
             // Flash effect pada casing mesin
-            machine.style.setProperty('--target-color', glowColor); 
+            machine.style.setProperty('--target-color', glowColor === 'glitch' ? '#00ffff' : glowColor); 
             machine.classList.add('mode-win'); 
             setTimeout(() => { machine.classList.remove('mode-win'); }, 200);
 
@@ -902,13 +954,15 @@
                 // Spawn Petir
                 activeBolts.push(new UltimateLightningBolt(tx, ty, coreColor, glowColor, intensity, mode));
                 
+                let ringColor = glowColor === 'glitch' ? '#00ffff' : glowColor;
+
                 // Spawn 3 Gelombang Ring Listrik
-                sparks.push(new JaggedElectricRing(tx, ty, glowColor, 0));  
-                sparks.push(new JaggedElectricRing(tx, ty, glowColor, 5));  
-                sparks.push(new JaggedElectricRing(tx, ty, glowColor, 10)); 
+                sparks.push(new JaggedElectricRing(tx, ty, ringColor, 0));  
+                sparks.push(new JaggedElectricRing(tx, ty, ringColor, 5));  
+                sparks.push(new JaggedElectricRing(tx, ty, ringColor, 10)); 
                 
                 // Efek Pecahan & Asap
-                for(let k=0; k<8; k++) sparks.push(new ElectricShard(tx, ty, glowColor));
+                for(let k=0; k<8; k++) sparks.push(new ElectricShard(tx, ty, ringColor));
                 for(let k=0; k<5; k++) sparks.push(new Smoke(tx, ty));
             }
         }
@@ -937,7 +991,7 @@
             if(!u) { showSystemAlert("USERNAME KOSONG"); return; }
             if(!p) { showSystemAlert("PASSWORD KOSONG"); return; }
 
-            const raw = localStorage.getItem('god_perfect_v12_' + u);
+            const raw = localStorage.getItem('god_perfect_v13_' + u);
             let msg = "";
             
             if(raw) {
@@ -971,19 +1025,30 @@
         }
 
         function save() { 
-            if(!state.isGuest && state.user) { localStorage.setItem('god_perfect_v12_' + state.user, JSON.stringify(state)); }
+            if(!state.isGuest && state.user) { localStorage.setItem('god_perfect_v13_' + state.user, JSON.stringify(state)); }
         }
 
+        // --- REVISI: VISUAL MESIN GLOW (OUTER EDGE) ---
         function updateMachineState() {
             const m = document.getElementById('machineBody');
             const btn = document.getElementById('btnBoost');
-            m.style.borderColor = '#444'; // Reset
+            
+            // Reset Default
+            m.style.borderColor = '#444'; 
+            m.style.boxShadow = '0 0 60px rgba(0,0,0,0.8)'; // Default Shadow
             
             if (Date.now() < temp.luckExpiry) {
-                m.style.borderColor = varCSS('--demon'); document.getElementById('luckStatus').style.display='flex';
+                // POTION MODE (MERAH)
+                m.style.borderColor = varCSS('--demon'); 
+                m.style.boxShadow = '0 0 60px var(--demon)'; // Outer Glow Merah
+                document.getElementById('luckStatus').style.display='flex';
             } else {
                 document.getElementById('luckStatus').style.display='none';
-                if (temp.boost) m.style.borderColor = varCSS('--glitch');
+                if (temp.boost) {
+                    // BOOST MODE (CYAN)
+                    m.style.borderColor = varCSS('--glitch');
+                    m.style.boxShadow = '0 0 40px var(--glitch)'; // Outer Glow Cyan
+                }
             }
         }
         function varCSS(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
@@ -1048,6 +1113,9 @@
 
         async function spinSequence(count) {
             if(temp.spinning) return; 
+            
+            // NOTE: KITA TIDAK MATIKAN SOUND DI SINI. SOUND JALAN TERUS SAMPAI HABIS.
+
             const cost = (count*100) + (temp.boost ? 5000 : 0);
             if(state.coins < cost) { showSystemAlert("KOIN TIDAK CUKUP!"); return; }
             
@@ -1069,9 +1137,9 @@
                     sessionResults.push(item);
                     save(); 
                     
-                    // Logic Condition 4-Way Lightning
+                    // Logic Condition 4-Way Lightning (UPDATED)
                     let isFourWay = false;
-                    // Condition: Phoenix(9), Dragon(10), Joker(11) MUTASI OR NON-MUTASI
+                    // Condition: Phoenix(9), Dragon(10), Joker(11) (MUTASI OR NON-MUTASI)
                     if (item.id >= 9) {
                         isFourWay = true;
                     } 
@@ -1121,7 +1189,7 @@
                 let finished = 0;
                 
                 [1,2,3].forEach((id, idx) => {
-                    // Delay antar reel - UPDATED FOR MORE DRAMATIC STOP (400ms)
+                    // Delay antar reel
                     const dur = 1.2 + (idx * 0.4); 
                     
                     setTimeout(() => {
@@ -1143,28 +1211,24 @@
 
                             // === LOGIKA BAM BAM BAM & SOUND UPDATED ===
                             if (isWin) {
-                                // STOP sound win sebelumnya HANYA JIKA ada win baru
-                                stopWinSound(); 
-                                
-                                // Trigger Lightning Sesuai Kondisi Strict
+                                // 1. Trigger Visual Petir
                                 triggerLightning(id, targetItem, isFourWay); 
                                 
-                                // Sound Conditional
+                                // 2. Trigger Sound (Sesuai Tipe)
                                 if (isFourWay) {
-                                    playSound('win', targetItem); // Full Win Sound
+                                    // 4-Way (Mutant Gods OR Non-Mutant Gods)
+                                    stopWinSound(); 
+                                    playSound('win', targetItem); 
                                 } else {
-                                    // 1-Way Win Logic: Play sound but cut it "setengah tambah dikit"
-                                    playSound('win', targetItem);
-                                    setTimeout(() => {
-                                        stopWinSound(); // Cut sound after 4.6s
-                                    }, 4600);
+                                    // 1-Way -> Gunakan fungsi baru 'playOneWaySound'
+                                    playOneWaySound(id === 3);
                                 }
                             }
                             
                             finished++; 
                             if(finished === 3) setTimeout(resolve, isWin ? 800 : 300); 
                         }, {once:true});
-                    }, idx * 400); // UPDATED DELAY
+                    }, idx * 400); 
                 });
             });
         }
@@ -1211,46 +1275,57 @@
         }
 
         let jackpotResolver = null;
-        function showJackpotPopup(item) { 
-            return new Promise(resolve => { 
-                jackpotResolver = resolve; 
-                const pop = document.getElementById('jackpotPopup'); 
-                const cont = document.getElementById('jackpotCont'); 
-                const title = document.getElementById('jackpotTitle'); 
-                
-                cont.innerHTML = ''; 
-                title.innerText = "";
-                
-                const card = createCard(item, false); 
-                card.classList.add('jackpot-card'); 
-                
-                // Animasi Aesthetic Slowmotion
-                card.classList.add('anim-reveal'); 
-                
-                const animClass = getCardAnimationClass(item);
-                card.classList.add(animClass);
-                
-                const pulseText = document.createElement('div');
-                pulseText.className = 'tier-text-pulse';
-                pulseText.innerText = getTierText(item);
-                pulseText.style.color = item.mut > 0 ? (item.mut === 3 ? 'red' : item.color) : item.color;
-                cont.appendChild(pulseText);
-                
-                cont.appendChild(card); 
-                
-                if(item.mut > 0 || item.tier >= 5) {
-                    createJackpotParticles(cont, item.color);
-                }
-
-                pop.style.display = 'flex'; 
-                
-                setTimeout(() => {
-                    if(item.mut > 0) playSound('mut', item.mut); 
-                    else playSound('tier', item.tier); 
-                }, 600); 
-            }); 
-        }
+function showJackpotPopup(item) { 
+    return new Promise(resolve => { 
+        jackpotResolver = resolve; 
+        const pop = document.getElementById('jackpotPopup'); 
+        const cont = document.getElementById('jackpotCont'); 
+        const title = document.getElementById('jackpotTitle'); 
         
+        cont.innerHTML = ''; 
+        title.innerText = "";
+        
+        const card = createCard(item, false); 
+        card.classList.add('jackpot-card'); 
+        
+        // Animasi Aesthetic Slowmotion & Zoom
+        card.classList.add('anim-reveal'); 
+        
+        const animClass = getCardAnimationClass(item);
+        card.classList.add(animClass); 
+        
+        // --- BAGIAN TULISAN DENGAN DELAY ---
+        const pulseText = document.createElement('div');
+        pulseText.className = 'tier-text-pulse';
+        pulseText.innerText = getTierText(item);
+        pulseText.style.color = item.mut > 0 ? (item.mut === 3 ? 'red' : item.color) : item.color;
+        
+        // 1. MATIKAN DULU (SEMBUNYIKAN)
+        pulseText.style.opacity = '0';
+        pulseText.style.animation = 'none'; // Matikan animasi CSS biar gak bocor
+        
+        cont.appendChild(pulseText);
+        cont.appendChild(card); 
+        
+        if(item.mut > 0 || item.tier >= 5) {
+            createJackpotParticles(cont, item.color);
+        }
+
+        pop.style.display = 'flex'; 
+        
+        // 2. MUNCULKAN SETELAH 4 DETIK
+        setTimeout(() => {
+            pulseText.style.animation = ''; // Nyalakan animasi CSS
+            pulseText.style.opacity = '1';  // Munculkan
+        }, 1600); // <--- UBAH ANGKA INI JIKA MAU LEBIH CEPAT/LAMBAT (1000 = 1 Detik)
+
+        setTimeout(() => {
+            if(item.mut > 0) playSound('mut', item.mut); 
+            else playSound('tier', item.tier); 
+        }, 600); 
+    }); 
+}
+      
         function closeJackpot() { 
             document.getElementById('jackpotPopup').style.display = 'none'; 
             if(jackpotResolver) jackpotResolver(); 
@@ -1410,17 +1485,35 @@
             const grid = document.getElementById('invGrid'); grid.innerHTML = '';
             let list = [...state.items];
 
-            // Filter Tab
+            // Filter Tab (Tab Navigasi)
             if(currentTab === 'mutant') list = list.filter(i => i.mut > 0);
             else if(currentTab === 'fav') list = list.filter(i => i.isFav);
 
-            // Filter Kategori (Modal Filter)
+            // Filter Kategori (Modal Filter - LOGIC UPDATED)
             if (temp.filterType && temp.filterType !== 'all') {
-                if(temp.filterType === 'god') list = list.filter(i => i.tier >= 4);
-                else if(temp.filterType === 'mutant') list = list.filter(i => i.mut > 0);
-                else if(temp.filterType === 'high') list = list.filter(i => i.tier >= 4);
-                else if(temp.filterType === 'mid') list = list.filter(i => i.tier >= 2 && i.tier < 4);
-                else if(temp.filterType === 'trash') list = list.filter(i => i.tier <= 1 && i.mut === 0);
+                if(temp.filterType === 'god') {
+                    // DEWA: SEMUA ITEM (Sort Logic handle ini)
+                    // list = list; // Tidak di filter, hanya di sort nanti
+                }
+                else if(temp.filterType === 'mutant') {
+                    // KHUSUS MUTASI
+                    list = list.filter(i => i.mut > 0);
+                }
+                else if(temp.filterType === 'high') {
+                    // HIGH TIER: Joker, Dragon, Phoenix (Non-Mutant) + Tier 3,2,1,0 (Mutasi & Non)
+                    // Logic: Keep if (Tier >= 4 AND Non-Mutant) OR (Tier <= 3)
+                    // Ini mengexclude Mutasi God Tier (karena masuk ke Filter Mutasi) jika sesuai interpretasi strict "Non Mutasinya yang diambil"
+                    // Tapi biasanya user ingin God Tier Non-Mutant + Semua Tier Bawah.
+                    list = list.filter(i => (i.tier >= 4 && i.mut === 0) || i.tier <= 3);
+                }
+                else if(temp.filterType === 'mid') {
+                    // MID TIER: Orb (Tier 3) sampai Bawah (Mutasi/Non Mutasi)
+                    list = list.filter(i => i.tier <= 3);
+                }
+                else if(temp.filterType === 'trash') {
+                    // SAMPAH: Tier 0 & 1 (Mutasi/Non Mutasi)
+                    list = list.filter(i => i.tier <= 1);
+                }
             }
 
             // SORTING: Favorit > Tier > Mutasi > Value
@@ -1434,7 +1527,12 @@
 
             document.getElementById('filterCount').innerText = `${list.length} Items`;
             let fName = "SEMUA";
-            if(temp.filterType === 'god') fName = "DEWA"; else if(temp.filterType === 'trash') fName = "SAMPAH";
+            if(temp.filterType === 'god') fName = "DEWA (ALL)"; 
+            else if(temp.filterType === 'mutant') fName = "MUTANT ONLY";
+            else if(temp.filterType === 'high') fName = "HIGH TIER+";
+            else if(temp.filterType === 'mid') fName = "MID TIER";
+            else if(temp.filterType === 'trash') fName = "SAMPAH";
+            
             document.getElementById('filterLabel').innerText = `FILTER: ${fName}`;
 
             list.forEach(i => {
@@ -1534,11 +1632,17 @@
 
         function updateFilterCounts() {
             const all = state.items;
-            document.getElementById('cntGod').innerText = all.filter(i => i.tier >= 4).length;
+            // UPDATE LOGIC COUNTER SESUAI FILTER
+            // GOD (All)
+            document.getElementById('cntGod').innerText = all.length;
+            // MUTANT
             document.getElementById('cntMut').innerText = all.filter(i => i.mut > 0).length;
-            document.getElementById('cntHigh').innerText = all.filter(i => i.tier >= 4).length;
-            document.getElementById('cntMid').innerText = all.filter(i => i.tier >= 2 && i.tier < 4).length;
-            document.getElementById('cntTrash').innerText = all.filter(i => i.tier <= 1 && i.mut === 0).length;
+            // HIGH (Joker/Dragon/Phoenix Non-Mutant + Tier <= 3)
+            document.getElementById('cntHigh').innerText = all.filter(i => (i.tier >= 4 && i.mut === 0) || i.tier <= 3).length;
+            // MID (Tier <= 3)
+            document.getElementById('cntMid').innerText = all.filter(i => i.tier <= 3).length;
+            // TRASH (Tier <= 1)
+            document.getElementById('cntTrash').innerText = all.filter(i => i.tier <= 1).length;
         }
 
         function applyFilter(type) { temp.filterType = type; hideModal('filterModal'); renderInv(); }
@@ -1549,11 +1653,21 @@
             else if(currentTab === 'fav') candidates = candidates.filter(i => i.isFav);
             
             if (temp.filterType && temp.filterType !== 'all') {
-                if(temp.filterType === 'god') candidates = candidates.filter(i => i.tier >= 4);
-                else if(temp.filterType === 'mutant') candidates = candidates.filter(i => i.mut > 0);
-                else if(temp.filterType === 'high') candidates = candidates.filter(i => i.tier >= 4);
-                else if(temp.filterType === 'mid') candidates = candidates.filter(i => i.tier >= 2 && i.tier < 4);
-                else if(temp.filterType === 'trash') candidates = candidates.filter(i => i.tier <= 1 && i.mut === 0);
+                 if(temp.filterType === 'god') { 
+                    // No Filter
+                 }
+                 else if(temp.filterType === 'mutant') {
+                    candidates = candidates.filter(i => i.mut > 0);
+                 }
+                 else if(temp.filterType === 'high') {
+                    candidates = candidates.filter(i => (i.tier >= 4 && i.mut === 0) || i.tier <= 3);
+                 }
+                 else if(temp.filterType === 'mid') {
+                    candidates = candidates.filter(i => i.tier <= 3);
+                 }
+                 else if(temp.filterType === 'trash') {
+                    candidates = candidates.filter(i => i.tier <= 1);
+                 }
             }
             
             // PROTEKSI FAVORIT (Exclude Favorite Items)
@@ -1688,4 +1802,4 @@
         function handleAlertCancel() { document.getElementById('systemAlert').style.display = 'none'; }
     </script>
 </body>
-</html>
+</html
