@@ -263,8 +263,10 @@
     <canvas id="particleCanvas"></canvas>
     <canvas id="lightningCanvas"></canvas> <div class="dim-overlay" id="dimOverlay"></div>
 
-    <audio id="bgm1" src="https://a.top4top.io/m_3664ewg8p0.mp3" preload="auto"></audio>
-    <audio id="bgm2" src="https://a.top4top.io/m_3664ewg8p0.mp3" preload="auto"></audio>
+    <audio id="bgm1" src="https://c.top4top.io/m_3668sdlrl1.mp3" preload="auto"></audio>
+    <audio id="bgm2" src="https://e.top4top.io/m_3668614of0.mp3" preload="auto"></audio>
+    <audio id="bgm3" src="https://k.top4top.io/m_366803ss70.mp3" preload="auto"></audio>
+    
     <audio id="demonAudio" src="https://a.top4top.io/m_3663cs2cw0.mp3"></audio>
     <audio id="winAudio" src="https://l.top4top.io/m_3663vc4970.mp3"></audio>
     <audio id="winAudio2" src="https://l.top4top.io/m_3663vc4970.mp3"></audio>
@@ -520,11 +522,8 @@
         // --- AUDIO ENGINE ---
         let actx = null;
         let masterGain = null;
-        const BASE_BGM_VOL = 0.6; 
-        let currentBGM = 1; 
-        const bgm1 = document.getElementById('bgm1'); const bgm2 = document.getElementById('bgm2'); 
-        const SWAP_TIME = 96.0; let isSwapping = false;
-
+        const BASE_BGM_VOL = 0.7; 
+        
         // VARIABLE UNTUK 1-WAY LIGHTNING SOUND
         let activeOneWaySound = null;
 
@@ -633,23 +632,24 @@
             el2.pause(); el2.currentTime = 0;
         }
 
-        function startPingPong() { 
-            bgm1.volume = BASE_BGM_VOL; bgm2.volume = BASE_BGM_VOL; bgm2.muted = true; 
-            bgm2.play().then(() => { bgm2.pause(); bgm2.muted=false; bgm2.currentTime=0; }); 
-            bgm1.currentTime = 0.3; bgm1.play().catch(e => console.log("BGM Start blocked")); 
-            setInterval(monitorPingPong, 50); 
-        }
+        // --- UPDATED MUSIC LOOP SYSTEM ---
+        function startMusicLoop() { 
+            const b1 = document.getElementById('bgm1');
+            const b2 = document.getElementById('bgm2');
+            const b3 = document.getElementById('bgm3');
 
-        function monitorPingPong() { 
-            let active = currentBGM === 1 ? bgm1 : bgm2; let next = currentBGM === 1 ? bgm2 : bgm1; 
-            if (!isSwapping && active.currentTime >= SWAP_TIME) {
-                isSwapping = true;
-                next.currentTime = 0.3; next.volume = BASE_BGM_VOL;
-                next.play().then(() => {
-                    setTimeout(() => { active.pause(); active.currentTime = 0; currentBGM = currentBGM === 1 ? 2 : 1; isSwapping = false; }, 1000); 
-                }).catch(e => { isSwapping = false; });
-            }
-            if (active.paused && !isSwapping && active.currentTime > 0 && active.currentTime < SWAP_TIME) { active.play().catch(()=>{}); } 
+            // Set Initial Volume
+            b1.volume = BASE_BGM_VOL; 
+            b2.volume = 0.8; 
+            b3.volume = 0.9;
+
+            // Logic: 1 -> 2 -> 3 -> 1 (Loop)
+            b1.onended = () => { b1.currentTime = 0; b2.play().catch(()=>{}); };
+            b2.onended = () => { b2.currentTime = 0; b3.play().catch(()=>{}); };
+            b3.onended = () => { b3.currentTime = 0; b1.play().catch(()=>{}); };
+
+            // Start First Track
+            b1.play().catch(e => console.log("BGM Start blocked due to browser policy, waiting interaction")); 
         }
 
         // --- CANVAS SETUP ---
@@ -976,7 +976,7 @@
             actx = new (window.AudioContext || window.webkitAudioContext)(); 
             masterGain = actx.createGain(); masterGain.gain.value = 1.0; 
             masterGain.connect(actx.destination); actx.resume(); 
-            initParticles(); startPingPong(); 
+            initParticles(); startMusicLoop(); 
         }
 
         function togglePass() {
@@ -1802,4 +1802,4 @@ function showJackpotPopup(item) {
         function handleAlertCancel() { document.getElementById('systemAlert').style.display = 'none'; }
     </script>
 </body>
-</html
+</html>
